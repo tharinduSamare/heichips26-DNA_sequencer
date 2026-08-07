@@ -4,7 +4,7 @@ import time
 import argparse
 import threading
 import queue
-
+import pyfiglet
 
 def bitstring_to_bytes(bit_str: str) -> bytes:
 
@@ -29,14 +29,14 @@ def seq2bit_pattern(seq, type ="s"):
     bit_pattern = bit_pattern[:-2] # trim last two zeros added due to last loop
     return bitstring_to_bytes(bit_pattern)
 
-def receive_continuous_stream(port: str, baudrate: int = 115200):  
-    score = 0 
+def receive_continuous_stream(port: str, baudrate: int = 115200):
+    score = 0
     with serial.Serial(port, baudrate, timeout=1) as ser:
         while True:
             raw_data = ser.read(1) # number of bytes to read
             if len(raw_data) == 1:
                 score = int(raw_data.hex(),16)
-                print(f"\nMax Alignment Score: {score}")
+                print(f"\nSW: Max Alignment Score: {score}")
                 break
     return score
 
@@ -45,7 +45,7 @@ def send_and_read_bit_patterns(
     port: str, seq_1: bytes, seq_2: bytes, type:str = "1", first_flag:int =0 , baudrate: int = 115200) -> None:
     # print(f"seq_1 Packed bytes  : {seq_1.hex(' ')}")
 
-    with serial.Serial(port, baudrate= 115200, timeout=1) as ser:
+    with serial.Serial(port, baudrate, timeout=1) as ser:
         if(first_flag):
             bytes_written = ser.write(seq_1)
         bytes_written = ser.write(seq_2)
@@ -56,7 +56,7 @@ def send_and_read_bit_patterns(
             if len(raw_data) == 1:
                 accel_time_stop = time.perf_counter()
                 score = int(raw_data.hex(),16)
-                print(f"\nMax Alignment Score: {score} and time elapsed {accel_time_stop-accel_time_start}")
+                # print(f"\nHW: Max Alignment Score: {score} and hw time elapsed {accel_time_stop-accel_time_start}")
                 break
 
     return score
@@ -130,7 +130,7 @@ if __name__ == "__main__":
             # print("Seq A: ", seq_a)
             # print("Seq B: ", seq_b)
 
-            print(f"\nLocal Alignment Score: {results['max_alignment_score']} and software time {sw_time_stop-sw_time_start}")
+            # print(f"\nLocal Alignment Score: {results['max_alignment_score']} and software time {sw_time_stop-sw_time_start}")
             for idx, align in enumerate(results["aligned_sequences"], 1):
                 a1 = align["seq1_align"]
                 a2 = align["seq2_align"]
@@ -152,10 +152,12 @@ if __name__ == "__main__":
             port_name = "/dev/ttyUSB1"
 
             score = send_and_read_bit_patterns(port=port_name, seq_1=seq_a_bit_pattern, seq_2=seq_b_bit_pattern, type=args.type, first_flag = first_flag, baudrate=115200)
+            pass_banner = pyfiglet.figlet_format("P A S S", font="small")
+            fail_banner = pyfiglet.figlet_format("F A I L", font="small")
             if (results['max_alignment_score'] == score):
-                print("\033[32mAlignment Matched\033[0m")
+                print(f"\033[32mAlignment Matched :: HW  {score} SW {results['max_alignment_score']}\n{pass_banner}\033[0m\n")
             else:
-                print(f"\033[31mAlignment Mismatched. Received: {score}, Expected: {results['max_alignment_score']}\033[0m")
+                print(f"\033[31mAlignment Mismatched. Received: {score}, Expected: {results['max_alignment_score']}\n{fail_banner}\033[0m\n")
             print("\n######################\n")
             if(args.type=="2"):
                 first_flag = 0
@@ -206,7 +208,7 @@ if __name__ == "__main__":
                 # print("Seq A: ", seq_a)
                 # print("Seq B: ", seq_b)
 
-                print(f"\nLocal Alignment Score: {results['max_alignment_score']}\n")
+                # print(f"\nLocal Alignment Score: {results['max_alignment_score']}\n")
                 # for idx, align in enumerate(results["aligned_sequences"], 1):
                 #     a1 = align["seq1_align"]
                 #     a2 = align["seq2_align"]
