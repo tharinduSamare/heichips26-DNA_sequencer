@@ -52,7 +52,7 @@ always_comb begin
 
         IDLE_STATE: begin
             if (s_in_valid && t_in_valid) begin
-                $error("Error: Both s_in and t_in are valid at the same time. Only one should be valid.");
+                // $error("Error: Both s_in and t_in are valid at the same time. Only one should be valid.");
                 state_next = RESET_STATE;
             end
             else if(s_in_valid == 1'b1) begin
@@ -95,7 +95,7 @@ always_comb begin
 
         CLEAR_STATE: begin // need this state to reset the systolic array after processing all inputs
             if (s_in_valid == 1'b1 && t_in_valid == 1'b1) begin
-                $error("Error: Both s_in and t_in are valid at the same time. Only one should be valid.");
+                // $error("Error: Both s_in and t_in are valid at the same time. Only one should be valid.");
                 state_next = RESET_STATE;
             end
             else if(s_in_valid == 1'b1) begin
@@ -112,7 +112,7 @@ always_comb begin
         end
 
         default: begin
-            $error("Error: Invalid state encountered in systolic_array.");
+            // $error("Error: Invalid state encountered in systolic_array.");
             state_next = RESET_STATE;
         end            
 
