@@ -22,38 +22,22 @@ module heichips26_dna_sequencer (
 );
 
     // List all unused inputs to prevent warnings
-    wire _unused = &{ena};
+    wire _unused = &{ena, uio_in[7:5], uio_out[7:0]};
 
-    logic signed [`REG_WIDTH-1:0] max_out_reg;
-    logic s_in_ready_reg, t_in_ready_reg, max_valid_reg;
-
-    systolic_array systolic_array_inst (
-        .clk(clk), 
-        .rstn(rst_n),
-        .s_in(ui_in[2:0]), 
-        .t_in(ui_in[5:3]),
-        .s_in_valid(ui_in[6]), 
-        .t_in_valid(ui_in[7]),
-        .s_in_ready(s_in_ready_reg), 
-        .t_in_ready(t_in_ready_reg),
-        .max_valid(max_valid_reg),
-        .max_out(max_out_reg)
-    );
-    
-    // assign uo_out  = {{(8-`REG_WIDTH){1'b0}}, max_out_reg};
-    // assign uio_out = {5'b0, max_valid_reg, t_in_ready_reg, s_in_ready_reg};
-    assign uio_oe  = '1;
-    assign uo_out[7:6] = '0;
-    assign uio_out = 8'b0;
-
-    accelerator  accelerator_inst(
+    accelerator accelerator_inst(
         .clk(clk), .rstn(rst_n),
-        .seq_in({uio_in[7], uio_in[7:0], ui_in[7:0]}),
-        .wr_en(uio_in[6]),
-        .read_addr(uio_in[5]),
+        .seq_in(ui_in[7:0]),
+        .seq_type(uio_in[0]),
+        .wr_en(uio_in[1]),
+        .wr_addr(uio_in[2]),
+        .rd_en(uio_in[3]),
+        .rd_addr(uio_in[4]),
         .data_out(uo_out[5:0])
     );
 
+    assign uio_oe  = '1;
+    assign uo_out[7:6] = 2'b0;
+    assign uio_out[7:0] = 8'b0;
     
     /*logic [7:0] count;
     

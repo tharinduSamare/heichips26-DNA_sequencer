@@ -52,7 +52,7 @@ always_comb begin
 
         IDLE_STATE: begin
             if (s_in_valid && t_in_valid) begin
-                // $error("Error: Both s_in and t_in are valid at the same time. Only one should be valid.");
+                $error("Error: Both s_in and t_in are valid at the same time. Only one should be valid.");
                 state_next = RESET_STATE;
             end
             else if(s_in_valid == 1'b1) begin
@@ -95,7 +95,7 @@ always_comb begin
 
         CLEAR_STATE: begin // need this state to reset the systolic array after processing all inputs
             if (s_in_valid == 1'b1 && t_in_valid == 1'b1) begin
-                // $error("Error: Both s_in and t_in are valid at the same time. Only one should be valid.");
+                $error("Error: Both s_in and t_in are valid at the same time. Only one should be valid.");
                 state_next = RESET_STATE;
             end
             else if(s_in_valid == 1'b1) begin
@@ -112,7 +112,7 @@ always_comb begin
         end
 
         default: begin
-            // $error("Error: Invalid state encountered in systolic_array.");
+            $error("Error: Invalid state encountered in systolic_array.");
             state_next = RESET_STATE;
         end            
 
@@ -153,7 +153,6 @@ generate
     for(i=0; i<`N; i++) begin : PE_ARRAY
         localparam local_max_score = (i+1) * `MATCH;
         localparam local_reg_width = $clog2(local_max_score + 1) + 1;
-        //localparam local_reg_width = `REG_WIDTH; // DEBUG
         
         PE #(.REG_WIDTH(local_reg_width)) pe_inst(
             .clk(clk),
@@ -190,21 +189,21 @@ assign processing = (state_next == SEND_T_STATE) || (|result_valid_in_bus);
 assign s_in_ready = ~processing;
 assign t_in_ready = (state == IDLE_STATE) || (state == SEND_T_STATE) || (state == CLEAR_STATE);
 
-// assert property (@(posedge clk) disable iff (!rstn) 
-//     state inside {
-//         RESET_STATE,
-//         IDLE_STATE,
-//         SEND_S_STATE,
-//         SEND_T_STATE,
-//         DONE_STATE,
-//         CLEAR_STATE
-//     })
-//     else $error("Invalid state: %s", state);
+assert property (@(posedge clk) disable iff (!rstn) 
+    state inside {
+        RESET_STATE,
+        IDLE_STATE,
+        SEND_S_STATE,
+        SEND_T_STATE,
+        DONE_STATE,
+        CLEAR_STATE
+    })
+    else $error("Invalid state: %s", state);
 
-// assert property (@(posedge clk) disable iff (!rstn) !(s_in_valid && t_in_valid)) else $error("Both S and T sequences can not be valid at once");
+assert property (@(posedge clk) disable iff (!rstn) !(s_in_valid && t_in_valid)) else $error("Both S and T sequences can not be valid at once");
 
-// assert property (@(posedge clk) disable iff (!rstn) shift_s |-> (state == SEND_S_STATE || state == IDLE_STATE)) else $error("shift_s = 1 at wrong state");
+assert property (@(posedge clk) disable iff (!rstn) ~shift_s || (state == SEND_S_STATE || state == IDLE_STATE)) else $error("shift_s = 1 at wrong state");
 
-// assert property (@(posedge clk) disable iff (!rstn) max_valid |-> (max_out <= `MAX_SCORE)) else $error("Max_out exceeded possible maximum value");
+assert property (@(posedge clk) disable iff (!rstn) ~max_valid || (max_out <= `MAX_SCORE)) else $error("Max_out exceeded possible maximum value");
 
 endmodule

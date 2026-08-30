@@ -24,4 +24,7 @@ parameter signed [`REG_WIDTH-1:0] BETA  = 1; // Gap extension penalty
 `define BASE_G     3'b110
 `define BASE_T     3'b111
 
+`define FIFO_HIGH_ADDR 1'b1
+`define FIFO_LOW_ADDR  1'b0
+
 `endif

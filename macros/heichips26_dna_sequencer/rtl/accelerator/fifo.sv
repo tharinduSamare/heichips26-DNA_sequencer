@@ -2,7 +2,9 @@
 
 module fifo(
     input logic clk, rstn,
-    input logic [`CHA_SEQ_LENGTH:0] seq_in, // [s/t, seq]
+    input logic [`N-1:0] seq_in,
+    input logic seq_type,
+    input logic wr_addr,
     input logic wr_en, rd_en,
     input logic read_last_char,
     output logic [`CHA_SEQ_LENGTH:0] seq_out, // [s/t, seq]
@@ -22,18 +24,23 @@ always_ff @(posedge clk) begin
     else begin
         // fifo write
         if(wr_en & !fifo_full) begin
-            fifo[fifo_wr_ptr] <= seq_in;
-            fifo_wr_ptr <= ~fifo_wr_ptr;
+            if(wr_addr == `FIFO_LOW_ADDR) begin
+                fifo[fifo_wr_ptr][`N-1:0] <= seq_in;
+            end
+            else begin // wr_addr = `FIFO_HIGH_ADDR
+                fifo[fifo_wr_ptr][`CHA_SEQ_LENGTH-1:`N] <= seq_in;
+                fifo[fifo_wr_ptr][`CHA_SEQ_LENGTH] <= seq_type;
+                fifo_wr_ptr <= ~fifo_wr_ptr;
+            end
         end
 
         // fifo read
-        if (rd_en & !fifo_empty ) begin
-            
+        if (rd_en & !fifo_empty & read_last_char ) begin
             fifo_rd_ptr <= ~fifo_rd_ptr;
         end
 
         // fifo fill count
-        case ({(wr_en & !fifo_full), (wr_en & !fifo_empty & read_last_char)})
+        case ({(wr_en && !fifo_full && (wr_addr == `FIFO_HIGH_ADDR)), (rd_en && !fifo_empty && read_last_char)})
             2'b01: fifo_fill_count <= fifo_fill_count - 1'b1; // no write & read
             2'b10: fifo_fill_count <= fifo_fill_count + 1'b1; // write & no read
             default: fifo_fill_count <= fifo_fill_count;
