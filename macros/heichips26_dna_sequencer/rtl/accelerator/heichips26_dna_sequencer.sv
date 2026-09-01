@@ -22,20 +22,18 @@ module heichips26_dna_sequencer (
 );
 
     // List all unused inputs to prevent warnings
-    wire _unused = &{ena, uio_in[7:5], uio_out[7:0]};
+    wire _unused = &{ena, ui_in[7:4], uio_out[7:0]};
 
     accelerator accelerator_inst(
         .clk(clk), .rstn(rst_n),
-        .seq_in(ui_in[7:0]),
-        .seq_type(uio_in[0]),
-        .wr_en(uio_in[1]),
-        .wr_addr(uio_in[2]),
-        .rd_en(uio_in[3]),
-        .rd_addr(uio_in[4]),
+        .addr(ui_in[0]),
+        .wr_en(ui_in[1]),
+        .rd_en(ui_in[2]),
+        .data_in({ui_in[3], uio_in[7:0]}), //{seq_type, seq[`N-1:0]}
         .data_out(uo_out[5:0])
     );
 
-    assign uio_oe  = '1;
+    assign uio_oe  = '0;
     assign uo_out[7:6] = 2'b0;
     assign uio_out[7:0] = 8'b0;
     

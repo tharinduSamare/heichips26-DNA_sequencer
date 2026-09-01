@@ -27,4 +27,10 @@ parameter signed [`REG_WIDTH-1:0] BETA  = 1; // Gap extension penalty
 `define FIFO_HIGH_ADDR 1'b1
 `define FIFO_LOW_ADDR  1'b0
 
+`define RESULT_ADDR 1'b0
+`define STATUS_ADDR 1'b1
+
+`define ACCELERATOR_ADDR_MSB 1'b1
+`define MEMORY_ADDR_MSB      1'b0
+
 `endif
