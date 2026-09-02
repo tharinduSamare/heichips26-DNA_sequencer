@@ -11,14 +11,14 @@ def random_dna_sequence(len: int):
 
 def seq_to_arr_string(dna_str: str):
     encoding = { # encode macros from macros.svh
-        'A': '100',
-        'C': '101',
-        'G': '110',
-        'T': '111',
-        'a': '100',
-        'c': '101',
-        'g': '110',
-        't': '111'
+        'A': '00',
+        'C': '01',
+        'G': '10',
+        'T': '11',
+        'a': '00',
+        'c': '01',
+        'g': '10',
+        't': '11'
     }
     encoded_list = []
     for base in dna_str:
@@ -28,14 +28,14 @@ def seq_to_arr_string(dna_str: str):
     
 def seq_to_arr_string_list(dna_str: str):
     encoding = { # encode macros from macros.svh
-        'A': '100',
-        'C': '101',
-        'G': '110',
-        'T': '111',
-        'a': '100',
-        'c': '101',
-        'g': '110',
-        't': '111'
+        'A': '00',
+        'C': '01',
+        'G': '10',
+        'T': '11',
+        'a': '00',
+        'c': '01',
+        'g': '10',
+        't': '11'
     }
     encoded_list = []
     for base in dna_str:
@@ -172,10 +172,10 @@ def smith_waterman_impl(seq1, seq2, match=2, mismatch=-1, alpha=-2, beta=-1):
 
 def generate_seq(prev_seq_a):
     if(not len(prev_seq_a)):
-         seq1_len = 16
+         seq1_len = 8
     else:
         seq1_len = 0
-    seq2_len = 16
+    seq2_len = 8
     seq_a, seq_b = generate_dna_pair(seq1_len, seq2_len,0.5)
     if(len(prev_seq_a)):
          seq_a = prev_seq_a
