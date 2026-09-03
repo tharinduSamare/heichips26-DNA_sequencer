@@ -140,11 +140,14 @@ generate
 
     for(i=1; i<`N; i++) begin : PE_CHAIN
 
+        localparam prev_max_score = i * `MATCH;
+        localparam prev_reg_width = $clog2(prev_max_score + 1) + 1;
+
         assign s_in_bus[i] = s_out_bus[i-1];
         assign t_in_bus[i] = t_out_bus[i-1];
-        assign max_in_bus[i] = max_out_bus[i-1];
-        assign f_in_bus[i] = f_out_bus[i-1];
-        assign v_in_bus[i] = v_out_bus[i-1];
+        assign max_in_bus[i] = `REG_WIDTH'(signed'(max_out_bus[i-1][prev_reg_width-1:0]));
+        assign f_in_bus[i] = `REG_WIDTH'(signed'(f_out_bus[i-1][prev_reg_width-1:0]));
+        assign v_in_bus[i] = `REG_WIDTH'(signed'(v_out_bus[i-1][prev_reg_width-1:0]));
         assign result_valid_in_bus[i] = result_valid_out_bus[i-1];
     end
 endgenerate
@@ -160,15 +163,15 @@ generate
             .s_in(s_in_bus[i]),
             .t_in(t_in_bus[i]),
             .shift_s(shift_s),
-            .max_in(max_in_bus[i]),
-            .f_in(f_in_bus[i]),
-            .v_in(v_in_bus[i]),
+            .max_in(max_in_bus[i][local_reg_width-1:0]),
+            .f_in(f_in_bus[i][local_reg_width-1:0]),
+            .v_in(v_in_bus[i][local_reg_width-1:0]),
             .result_valid_in(result_valid_in_bus[i]),
             .s_out(s_out_bus[i]),
             .t_out(t_out_bus[i]),
-            .max_out(max_out_bus[i]),
-            .f_out(f_out_bus[i]),
-            .v_out(v_out_bus[i]),
+            .max_out(max_out_bus[i][local_reg_width-1:0]),
+            .f_out(f_out_bus[i][local_reg_width-1:0]),
+            .v_out(v_out_bus[i][local_reg_width-1:0]),
             .result_valid_out(result_valid_out_bus[i])
 
         );

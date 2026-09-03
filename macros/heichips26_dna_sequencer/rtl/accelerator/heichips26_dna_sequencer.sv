@@ -36,23 +36,6 @@ module heichips26_dna_sequencer (
     assign uio_oe  = '0;
     assign uo_out[7:6] = 2'b0;
     assign uio_out[7:0] = 8'b0;
-    
-    /*logic [7:0] count;
-    
-    counter counter_0 (
-    `ifdef USE_POWER_PINS
-        .VPWR  (VPWR),
-        .VGND  (VGND),
-    `endif
-        .clk_i    (clk),
-        .rst_ni   (rst_n),
-        .enable_i (ui_in[0]),
 
-        .count_o  (count)
-    );
-    
-    assign uo_out  = count;
-    assign uio_out = count;
-    assign uio_oe  = '1;*/
 
 endmodule

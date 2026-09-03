@@ -14,8 +14,8 @@
 `define S_LEN (`N * `SYMBOL_BITS)
 `define T_LEN (`M * `SYMBOL_BITS)
 
-parameter signed [`REG_WIDTH-1:0] ALPHA = 2; // Gap open penalty
-parameter signed [`REG_WIDTH-1:0] BETA  = 1; // Gap extension penalty
+parameter signed [2:0] ALPHA = 2; // Gap open penalty
+parameter signed [2:0] BETA  = 1; // Gap extension penalty
 
 `define BASE_IDLE  3'b000
 `define BASE_CLEAR 3'b001
