@@ -31,11 +31,8 @@ WAVEFORM_VIEWER ?= gtkwave
 OPEN_ARGS ?=
 
 # Folder structure
-<<<<<<< HEAD
-=======
 MACROS_DIR      := macros
 SCRIPTS_DIR     := scripts
->>>>>>> upstream/main
 COCOTB_DIR      := testbenches/cocotb
 VERILOG_TB_DIR 	:= testbenches/verilog
 XSCHEM_TB_DIR  	:= testbenches/xschem
@@ -67,12 +64,6 @@ _LINT_SRCS = $(SRCS)
 
 # Help Target
 help: ## Show this help message
-<<<<<<< HEAD
-	@echo 'Usage: make [target]'
-	@echo ''
-	@echo 'Available targets:'
-	@grep -E '^[a-zA-Z0-9_.-]+:.*## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-20s %s\n", $$1, $$2}'
-=======
 	@echo 'Usage: make <target> [CELL=<cellname>] [WAVEFORM_VIEWER=<gtkwave|surfer>] [OPEN_ARGS=<options>]'
 	@echo ''
 	@echo 'Available targets:'
@@ -81,7 +72,6 @@ help: ## Show this help message
 	@echo 'CELL defaults to $(TOP). Override to lint or simulate subcells.'
 	@echo 'WAVEFORM_VIEWER defaults to gtkwave. Use surfer to launch Surfer instead.'
 	@echo 'OPEN_ARGS passes extra options to sak-open.py for the open target (e.g. --all).'
->>>>>>> upstream/main
 .PHONY: help
 # ================================================================================================
 
