@@ -22,44 +22,20 @@ module heichips26_dna_sequencer (
 );
 
     // List all unused inputs to prevent warnings
-    wire _unused = &{ena, uio_in};
+    wire _unused = &{ena, ui_in[7:4], uio_out[7:0]};
 
-    logic signed [`REG_WIDTH-1:0] max_out_reg;
-    logic s_in_ready_reg, t_in_ready_reg, max_valid_reg;
-
-    systolic_array systolic_array_inst (
-        .clk(clk), 
-        .rstn(rst_n),
-        .s_in(ui_in[2:0]), 
-        .t_in(ui_in[5:3]),
-        .s_in_valid(ui_in[6]), 
-        .t_in_valid(ui_in[7]),
-        .s_in_ready(s_in_ready_reg), 
-        .t_in_ready(t_in_ready_reg),
-        .max_valid(max_valid_reg),
-        .max_out(max_out_reg)
+    accelerator accelerator_inst(
+        .clk(clk), .rstn(rst_n),
+        .addr(ui_in[0]),
+        .wr_en(ui_in[1]),
+        .rd_en(ui_in[2]),
+        .data_in({ui_in[3], uio_in[7:0]}), //{seq_type, seq[`N-1:0]}
+        .data_out(uo_out[5:0])
     );
-    
-    assign uo_out  = {{(8-`REG_WIDTH){1'b0}}, max_out_reg};
-    assign uio_out = {5'b0, max_valid_reg, t_in_ready_reg, s_in_ready_reg};
-    assign uio_oe  = '1;
-    
-    /*logic [7:0] count;
-    
-    counter counter_0 (
-    `ifdef USE_POWER_PINS
-        .VPWR  (VPWR),
-        .VGND  (VGND),
-    `endif
-        .clk_i    (clk),
-        .rst_ni   (rst_n),
-        .enable_i (ui_in[0]),
 
-        .count_o  (count)
-    );
-    
-    assign uo_out  = count;
-    assign uio_out = count;
-    assign uio_oe  = '1;*/
+    assign uio_oe  = '0;
+    assign uo_out[7:6] = 2'b0;
+    assign uio_out[7:0] = 8'b0;
+
 
 endmodule

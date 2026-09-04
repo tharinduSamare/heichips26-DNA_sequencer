@@ -140,11 +140,14 @@ generate
 
     for(i=1; i<`N; i++) begin : PE_CHAIN
 
+        localparam prev_max_score = i * `MATCH;
+        localparam prev_reg_width = $clog2(prev_max_score + 1) + 1;
+
         assign s_in_bus[i] = s_out_bus[i-1];
         assign t_in_bus[i] = t_out_bus[i-1];
-        assign max_in_bus[i] = max_out_bus[i-1];
-        assign f_in_bus[i] = f_out_bus[i-1];
-        assign v_in_bus[i] = v_out_bus[i-1];
+        assign max_in_bus[i] = `REG_WIDTH'(signed'(max_out_bus[i-1][prev_reg_width-1:0]));
+        assign f_in_bus[i] = `REG_WIDTH'(signed'(f_out_bus[i-1][prev_reg_width-1:0]));
+        assign v_in_bus[i] = `REG_WIDTH'(signed'(v_out_bus[i-1][prev_reg_width-1:0]));
         assign result_valid_in_bus[i] = result_valid_out_bus[i-1];
     end
 endgenerate
@@ -153,7 +156,6 @@ generate
     for(i=0; i<`N; i++) begin : PE_ARRAY
         localparam local_max_score = (i+1) * `MATCH;
         localparam local_reg_width = $clog2(local_max_score + 1) + 1;
-        //localparam local_reg_width = `REG_WIDTH; // DEBUG
         
         PE #(.REG_WIDTH(local_reg_width)) pe_inst(
             .clk(clk),
@@ -161,15 +163,15 @@ generate
             .s_in(s_in_bus[i]),
             .t_in(t_in_bus[i]),
             .shift_s(shift_s),
-            .max_in(max_in_bus[i]),
-            .f_in(f_in_bus[i]),
-            .v_in(v_in_bus[i]),
+            .max_in(max_in_bus[i][local_reg_width-1:0]),
+            .f_in(f_in_bus[i][local_reg_width-1:0]),
+            .v_in(v_in_bus[i][local_reg_width-1:0]),
             .result_valid_in(result_valid_in_bus[i]),
             .s_out(s_out_bus[i]),
             .t_out(t_out_bus[i]),
-            .max_out(max_out_bus[i]),
-            .f_out(f_out_bus[i]),
-            .v_out(v_out_bus[i]),
+            .max_out(max_out_bus[i][local_reg_width-1:0]),
+            .f_out(f_out_bus[i][local_reg_width-1:0]),
+            .v_out(v_out_bus[i][local_reg_width-1:0]),
             .result_valid_out(result_valid_out_bus[i])
 
         );
@@ -190,21 +192,21 @@ assign processing = (state_next == SEND_T_STATE) || (|result_valid_in_bus);
 assign s_in_ready = ~processing;
 assign t_in_ready = (state == IDLE_STATE) || (state == SEND_T_STATE) || (state == CLEAR_STATE);
 
-// assert property (@(posedge clk) disable iff (!rstn) 
-//     state inside {
-//         RESET_STATE,
-//         IDLE_STATE,
-//         SEND_S_STATE,
-//         SEND_T_STATE,
-//         DONE_STATE,
-//         CLEAR_STATE
-//     })
-//     else $error("Invalid state: %s", state);
+assert property (@(posedge clk) disable iff (!rstn) 
+    state inside {
+        RESET_STATE,
+        IDLE_STATE,
+        SEND_S_STATE,
+        SEND_T_STATE,
+        DONE_STATE,
+        CLEAR_STATE
+    })
+    else $error("Invalid state: %s", state);
 
-// assert property (@(posedge clk) disable iff (!rstn) !(s_in_valid && t_in_valid)) else $error("Both S and T sequences can not be valid at once");
+assert property (@(posedge clk) disable iff (!rstn) !(s_in_valid && t_in_valid)) else $error("Both S and T sequences can not be valid at once");
 
-// assert property (@(posedge clk) disable iff (!rstn) shift_s |-> (state == SEND_S_STATE || state == IDLE_STATE)) else $error("shift_s = 1 at wrong state");
+assert property (@(posedge clk) disable iff (!rstn) ~shift_s || (state == SEND_S_STATE || state == IDLE_STATE)) else $error("shift_s = 1 at wrong state");
 
-// assert property (@(posedge clk) disable iff (!rstn) max_valid |-> (max_out <= `MAX_SCORE)) else $error("Max_out exceeded possible maximum value");
+assert property (@(posedge clk) disable iff (!rstn) ~max_valid || (max_out <= `MAX_SCORE)) else $error("Max_out exceeded possible maximum value");
 
 endmodule
