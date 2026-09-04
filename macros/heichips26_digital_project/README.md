@@ -114,17 +114,9 @@
 │     └─ heichips26_digital_project.xspice
 ├─ 📁 rtl/
 │  └─ heichips26_digital_project.sv
-├─ 📁 schematic/
-│  └─ 📁 xschem/
-│     ├─ heichips26_digital_project.sym
-│     └─ xschemrc
 ├─ 📁 scripts/
-│  ├─ lay2img.py
-│  ├─ reorder_xspice_pins.py
-│  ├─ spi2xspice.py
-│  └─ 📁 plot_simulations/
-│     ├─ ngspice2python.py
-│     └─ plot_heichips26_digital_project.py
+│  ├─ sak-open.py
+│  └─ .sak-scripts-version
 ├─ 📁 testbenches/
 │  ├─ 📁 cocotb/
 │  │  ├─ heichips26_digital_project_tb.gtkw
@@ -167,14 +159,60 @@ make help
 ```
 
 
-## Linting
+### Open the Design Files
+
+Opens a file browser for this folder with `sak-open.py`, vendored from the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS) in `scripts/` (see `scripts/.sak-scripts-version`), one button per design file, grouped by directory:
+
+```sh
+make open
+```
+
+Clicking a button launches the matching tool in the file's own directory, so Xschem finds its `simulations/` folder and KLayout its run outputs where they belong:
+
+| File type | Tool | In the Nix shell |
+| --- | --- | --- |
+| `.sch`, `.sym` | Xschem | yes |
+| `.gds`, `.gds.gz`, `.oas`, `.oas.gz` | KLayout in edit mode | yes |
+| `.mag` | Magic | yes |
+| `.vcd`, `.fst`, `.gtkw` | GTKWave | yes |
+| `.raw` | gaw (ngspice rawfile) | no |
+| `.png`, `.pdf` | the desktop's handler (`xdg-open`) | no |
+| `.sv`, `.svh`, `.v`, `.vh`, `.vhd`, `.vhdl`, `.spice`, `.cir`, `.sp`, `.cdl`, `.sdc`, `.lef`, `.lib`, `.tcl`, `.mk`, `.yaml`, `.json`, `.py`, `.qmd`, `.tex`, `.md` and `Makefile` | gvim | no |
+
+Only these types get a button. Files with any other extension (`.sh`, `.svg`, `.pcf`, `.save`, `.rpt`, `.txt`, `.csv` and so on) are not listed.
+
+`gvim`, `gaw` and `xdg-open` are not part of this template's Nix shell, so their buttons report `cannot run …` in the status line instead of opening. Point them at a tool you do have with the per-type environment overrides — the variable name is `SAK_OPEN_` plus the extension in upper case (`SAK_OPEN_GDS_GZ` for `.gds.gz`, `SAK_OPEN_MAKEFILE` for `Makefile`):
+
+```sh
+SAK_OPEN_SV='code -w' SAK_OPEN_V='code -w' SAK_OPEN_MD='code -w' make open
+```
+
+`SAK_OPEN_TERMINAL` sets the terminal that the right-click "Open shell" entry starts; the Nix shell's `xterm` works there.
+
+Schematics and symbols that belong to one design unit share a single tabbed Xschem instance instead of one process per click. The unit is the nearest ancestor holding a `Makefile`, so this macro and its `counter` sub-macro each get their own instance, and every tab writes its netlists to the folder that macro's `xschemrc` pins.
+
+The tree is rescanned every 15 s, so files a running flow produces appear on their own and are highlighted for a minute. Generated directories are skipped by default: `runs/`, `sim_build/`, `obj_dir/`, `simulations/`, `__pycache__/`, `_freeze/` and `.git/`. The Xschem `simulations/` folder is one of them, so the `.raw` files show up only with `--all`. Pass extra options with `OPEN_ARGS`:
+
+```sh
+make open OPEN_ARGS=--all              # include the build outputs
+make open OPEN_ARGS="--prune backups"  # skip one more directory name
+make open OPEN_ARGS=--list             # print the file list and exit, no display needed
+```
+
+At most 400 buttons are drawn at once, because each one is an X window. `--all` on a hardened macro goes well past that — the LibreLane `runs/` trees alone hold hundreds of files — and what was left out is stated at the end of the list and in the status line. Narrow the filter, untick a few types, or raise the cap with `--max` (`0` for no limit).
+
+> [!NOTE]
+> This target needs a graphical display. On the HeiChips VM it works out of the box; over SSH use X11 forwarding (`ssh -X`). Without a display it stops with `cannot open a window`.
+
+
+### Linting
 
 To lint the Verilog/SystemVerilog source files with [Verilator](https://www.veripool.org/verilator/), run:
 
 ```sh
-make lint-verilog                # lint the full heichips26_digital_project design
-make lint-verilog CELL=heichips26_digital_project   # lint the standalone heichips26_digital_project cell
-make lint-verilog-all            # lint heichips26_digital_project and heichips26_digital_project in sequence
+make lint-verilog                # lint the full heichips26_digital_project design (top + counter RTL)
+make lint-verilog CELL=heichips26_digital_project   # equivalent: CELL defaults to heichips26_digital_project
+make lint-verilog-all            # lint the counter sub-macro, then heichips26_digital_project
 ```
 
 When `CELL=heichips26_digital_project` (the default), all synthesis sources are passed to Verilator.

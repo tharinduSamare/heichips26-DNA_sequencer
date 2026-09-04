@@ -158,7 +158,7 @@ value="
 .param VAPWR=1.5
 .csparam VAPWR=VAPWR
 .param Vcm=VAPWR/2
-.param temp=27
+.temp 27
 .param Cload=10p
 .param Rload=1k
 .options savecurrents klu method=gear reltol=1e-3 abstol=1e-12 gmin=1e-12
@@ -205,10 +205,6 @@ wrdata ../plot_simulations/data/@schname\\\\.txt
 *quit
 .endc
 "}
-C {devices/launcher.sym} 1740 -1590 0 0 {name=h2
-descr="Simulate" 
-tclcommand="xschem save; xschem netlist; xschem simulate"
-}
 C {title-3.sym} 0 0 0 0 {name=l2 author="Simon Dorrer" rev=1.0 lock=true}
 C {devices/launcher.sym} 1740 -1470 0 0 {name=h1
 descr="Load waves" 
@@ -262,10 +258,6 @@ m=1
 spice_ignore=true}
 C {devices/gnd.sym} 1420 -740 0 0 {name=l13 lab=GND}
 C {devices/gnd.sym} 1520 -740 0 0 {name=l14 lab=GND}
-C {devices/code_shown.sym} 20 -1550 0 0 {name=SAVE only_toplevel=true
-format="tcleval( @value )"
-value=".include [file rootname [xschem get schname]].save
-"}
 C {devices/gnd.sym} 1420 -1020 0 0 {name=l19 lab=GND}
 C {noconn.sym} 1280 -1020 2 0 {name=l20}
 C {noconn.sym} 1280 -1000 2 0 {name=l21}
@@ -325,3 +317,12 @@ C {heichips26_analog_project_pex.sym} 2720 -360 0 0 {name=x3
 spice_ignore=true}
 C {heichips26_analog_project.sym} 1080 -800 0 0 {name=x1
 }
+C {devices/launcher.sym} 1740 -1590 0 0 {name=h2
+descr="Simulate" 
+tclcommand="xschem save; xschem netlist; file mkdir $netlist_dir; write_data [save_params] $netlist_dir/[file rootname [file tail [xschem get current_name]]].save; xschem simulate"
+}
+C {devices/code_shown.sym} 20 -1570 0 0 {name=SAVE only_toplevel=true
+format="tcleval( @value )"
+value="
+.include [file rootname [file tail [xschem get schname]]].save
+"}

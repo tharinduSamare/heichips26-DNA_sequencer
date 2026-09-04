@@ -53,6 +53,7 @@ l=1.0u
 w=2.0u
 ng=2
 m=1
+mm_ok=1
 model=sg13_lv_nmos
 spiceprefix=X
 }
@@ -61,6 +62,7 @@ l=1.0u
 w=12.0u
 ng=2
 m=1
+mm_ok=1
 model=sg13_lv_pmos
 spiceprefix=X
 }
@@ -69,6 +71,7 @@ l=1.0u
 w=20.0u
 ng=20
 m=1
+mm_ok=1
 model=sg13_lv_nmos
 spiceprefix=X
 }
@@ -77,9 +80,12 @@ l=1.0u
 w=120.0u
 ng=20
 m=1
+mm_ok=1
 model=sg13_lv_pmos
 spiceprefix=X
 }
 C {devices/iopin.sym} 1360 -850 0 0 {name=p6 lab=vout}
 C {lab_pin.sym} 1320 -1140 1 0 {name=p16 sig_type=std_logic lab=VDD}
 C {lab_pin.sym} 1320 -560 3 0 {name=p17 sig_type=std_logic lab=VSS}
+C {annotate_fet_params.sym} 1520 -740 0 0 {name=annot1 ref=M1}
+C {annotate_fet_params.sym} 1520 -1020 0 0 {name=annot2 ref=M2}

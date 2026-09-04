@@ -65,11 +65,12 @@ This is the analog example **sub-macro** of the HeiChips 2026 template: the unit
 │  │  ├─ lookup_commands.ipynb
 │  │  └─ sizing_inverter.ipynb
 │  ├─ check_pex_ports.py
-│  ├─ lay2img.py
 │  ├─ sak-drc.sh
 │  ├─ sak-lvs.sh
+│  ├─ sak-open.py
 │  ├─ sak-pex.sh
 │  ├─ sak-pin-reorder.py
+│  ├─ sak-render.py
 │  └─ .sak-scripts-version
 ├─ 📁 testbenches/
 │  └─ 📁 xschem/
@@ -108,14 +109,16 @@ This is the analog example **sub-macro** of the HeiChips 2026 template: the unit
 
 ## Vendored Verification Scripts (`sak-*`)
 
-The DRC/LVS/PEX targets use the `sak-*` Swiss-Army-Knife scripts from [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS). Because this template runs in the **nix-shell** (not the IIC-OSIC-TOOLS container, where they are pre-installed), the scripts are vendored in `scripts/`:
+The verification, render and browse targets use the `sak-*` Swiss-Army-Knife scripts from [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS). Because this template runs in the **nix-shell** (not the IIC-OSIC-TOOLS container, where they are pre-installed), the scripts are vendored in `scripts/`:
 
 - `sak-drc.sh` — DRC with Magic or KLayout
 - `sak-lvs.sh` — LVS with Magic + Netgen or KLayout
 - `sak-pex.sh` — parasitic extraction with Magic
 - `sak-pin-reorder.py` — reorders extracted `.subckt` pins to match an Xschem symbol
+- `sak-render.py` — renders layout images from a GDS
+- `sak-open.py` — file browser that opens each design file in its tool (`make open`)
 
-`scripts/.sak-scripts-version` records the IIC-OSIC-TOOLS commit they were taken from. The scripts require the `PDKPATH` (`$PDK_ROOT/$PDK`) and `STD_CELL_LIBRARY` environment variables, which the Makefile exports automatically.
+`scripts/.sak-scripts-version` records the IIC-OSIC-TOOLS commit they were taken from. The DRC, LVS and PEX scripts require the `PDKPATH` (`$PDK_ROOT/$PDK`) and `STD_CELL_LIBRARY` environment variables, which the Makefile exports automatically; `sak-render.py` and `sak-open.py` need neither.
 
 
 ## Makefile Targets
@@ -134,8 +137,54 @@ The `sim-xschem` target accepts an optional `TB=<testbenchname>` parameter (defa
 All targets that operate on a specific cell accept an optional `CELL=<cellname>` parameter. The default is the top-level cell (`inverter`).
 
 ```sh
-make <target> [CELL=<cellname>] [EXT_MODE=<1|2|3>] [THRESHOLD=<mOhm>] [MINRES=<mOhm>] [MINDELAY=<ps>] [DRC_LEVEL=<precheck|macro|regular>] [EV_PRECISION=<digits>]
+make <target> [CELL=<cellname>] [EXT_MODE=<1|2|3>] [THRESHOLD=<mOhm>] [MINRES=<mOhm>] [MINDELAY=<ps>] [DRC_LEVEL=<precheck|macro|regular>] [EV_PRECISION=<digits>] [OPEN_ARGS=<options>]
 ```
+
+
+### Open the Design Files
+
+Opens a file browser for this folder with `sak-open.py`, vendored from the [IIC-OSIC-TOOLS](https://github.com/iic-jku/IIC-OSIC-TOOLS) in `scripts/` (see `scripts/.sak-scripts-version`), one button per design file, grouped by directory:
+
+```sh
+make open
+```
+
+Clicking a button launches the matching tool in the file's own directory, so Xschem finds its `simulations/` folder and KLayout its run outputs where they belong:
+
+| File type | Tool | In the Nix shell |
+| --- | --- | --- |
+| `.sch`, `.sym` | Xschem | yes |
+| `.gds`, `.gds.gz`, `.oas`, `.oas.gz` | KLayout in edit mode | yes |
+| `.mag` | Magic | yes |
+| `.vcd`, `.fst`, `.gtkw` | GTKWave | yes |
+| `.raw` | gaw (ngspice rawfile) | no |
+| `.png`, `.pdf` | the desktop's handler (`xdg-open`) | no |
+| `.sv`, `.svh`, `.v`, `.vh`, `.vhd`, `.vhdl`, `.spice`, `.cir`, `.sp`, `.cdl`, `.sdc`, `.lef`, `.lib`, `.tcl`, `.mk`, `.yaml`, `.json`, `.py`, `.qmd`, `.tex`, `.md` and `Makefile` | gvim | no |
+
+Only these types get a button. Files with any other extension (`.sh`, `.svg`, `.pcf`, `.save`, `.rpt`, `.txt`, `.csv` and so on) are not listed.
+
+`gvim`, `gaw` and `xdg-open` are not part of this template's Nix shell, so their buttons report `cannot run …` in the status line instead of opening. Point them at a tool you do have with the per-type environment overrides — the variable name is `SAK_OPEN_` plus the extension in upper case (`SAK_OPEN_GDS_GZ` for `.gds.gz`, `SAK_OPEN_MAKEFILE` for `Makefile`):
+
+```sh
+SAK_OPEN_SV='code -w' SAK_OPEN_V='code -w' SAK_OPEN_MD='code -w' make open
+```
+
+`SAK_OPEN_TERMINAL` sets the terminal that the right-click "Open shell" entry starts; the Nix shell's `xterm` works there.
+
+Schematics and symbols that belong to one design unit share a single tabbed Xschem instance instead of one process per click. The unit is the nearest ancestor holding a `Makefile`, so this macro gets its own instance and every tab writes its netlists to the folder this macro's `xschemrc` pins.
+
+The tree is rescanned every 15 s, so files a running flow produces appear on their own and are highlighted for a minute. Generated directories are skipped by default: `runs/`, `sim_build/`, `obj_dir/`, `simulations/`, `__pycache__/`, `_freeze/` and `.git/`. The Xschem `simulations/` folder is one of them, so the `.raw` files show up only with `--all`. Pass extra options with `OPEN_ARGS`:
+
+```sh
+make open OPEN_ARGS=--all              # include the build outputs
+make open OPEN_ARGS="--prune backups"  # skip one more directory name
+make open OPEN_ARGS=--list             # print the file list and exit, no display needed
+```
+
+At most 400 buttons are drawn at once, because each one is an X window. `--all` on a hardened macro goes well past that — the LibreLane `runs/` trees alone hold hundreds of files — and what was left out is stated at the end of the list and in the status line. Narrow the filter, untick a few types, or raise the cap with `--max` (`0` for no limit).
+
+> [!NOTE]
+> This target needs a graphical display. On the HeiChips VM it works out of the box; over SSH use X11 forwarding (`ssh -X`). Without a display it stops with `cannot open a window`.
 
 
 ### Layout File Extension Usage
@@ -180,6 +229,8 @@ make sim-xschem TB=inverter_tb_dc_vout
 ```
 
 All available testbench schematics are located in `testbenches/xschem/`. Generated netlists are written to `testbenches/xschem/simulations/`.
+
+Every testbench pulls in a FET `.save` file through its `SAVE` code block (e.g. `.include inverter_tb_ac_ol.save`). That file lists the operating-point parameters of every transistor (`ids`, `gm`, `gds`, `vth`, …), which the `annotate_fet_params` symbols and the `Annotate OP` launcher read back from the raw file. It is produced by Xschem's **IHP → Create FET .save file** menu entry, which writes into the netlist directory, so the include resolves relative to `testbenches/xschem/simulations/`, where ngspice runs. Because that folder is generated and git-ignored, both `sim-xschem` and the schematic's `Simulate` launcher regenerate the `.save` file on every run, so a fresh clone needs no manual export.
 
 
 ### Plot Xschem Simulation Results
@@ -309,7 +360,7 @@ make copy-gds
 
 ### Render Layout Image
 
-Renders the top-level layout GDS with `scripts/lay2img.py` and saves the two images `inverter_black.png` and `inverter_white.png` in `final/render/`:
+Renders the top-level layout GDS with `scripts/sak-render.py` and saves the two images `inverter_black.png` and `inverter_white.png` in `final/render/`:
 
 ```sh
 make render-gds
@@ -404,6 +455,31 @@ make magic-lvs CELL=inverter
 ```
 
 
+### Build Xschem PEX Symbol
+
+Builds the Xschem symbol the PEX flow needs, `schematic/xschem/<CELL>_pex.sym`, from the regular cell symbol `schematic/xschem/<CELL>.sym`:
+
+```sh
+make symbol-pex                  # build inverter_pex.sym from inverter.sym
+make symbol-pex CELL=<cellname>  # build the PEX symbol of another cell
+```
+
+The generated symbol is a verbatim copy of `<CELL>.sym` with a single change: `type=subcircuit` becomes `type=primitive`. Everything else (pin boxes and their order, `format`, `spectre_format`, `template`, graphics) is inherited, which is exactly what the PEX flow needs:
+
+- **`type=primitive`** stops Xschem from descending into a schematic of the same name. There is no `<CELL>_pex.sch`, so the instance line is emitted as it stands and the subcircuit comes from the `.include`d PEX netlist instead.
+- **`format="@name @pinlist @symname"`** makes the instance reference `@symname`, which resolves to `<CELL>_pex`, exactly the `.subckt` name the PEX flow writes.
+- **The pin order** is what `scripts/sak-pin-reorder.py` reorders the extracted netlist to, so it has to be the one of the cell symbol.
+
+`symbol-pex` runs automatically at the start of `klayout-pex` and `magic-pex`, so the symbol is rebuilt from the current `<CELL>.sym` before every extraction and cannot go stale when a pin is added, removed or renamed. Calling it by hand is only needed to refresh the symbol without re-running an extraction.
+
+If `<CELL>.sym` does not exist, the target prints a note and does nothing, which leaves the PEX targets running without a pin reorder just as before. It fails only when `<CELL>.sym` declares neither `type=subcircuit` nor `type=primitive`.
+
+> [!NOTE]
+> Every symbol in this project also carries `spectre_format="@name ( @pinlist ) @symname"`. Xschem writes that line itself whenever a symbol is built from a schematic's pin list (key `a`, `make_sym.awk`), and it is read **only** by the Spectre netlister, which is also the one that drives VACASK (`xschem.tcl` configures `vacask "$N"` as the default simulator for `netlist_type spectre`). The SPICE netlister used for ngspice ignores it, so it has no effect on any target in this Makefile.
+> Do not strip it: without it, instances of the symbol are **silently dropped** from a Spectre/VACASK netlist and the `subckt` line comes out with an empty port list, with no warning at all.
+
+
+
 ### Parasitic Extraction (PEX)
 
 Runs parasitic extraction on the layout in `layout/`. The extracted SPICE netlist is written to `netlist/pex/`.
@@ -424,7 +500,7 @@ The `EXT_MODE` parameter selects the extraction mode:
 
 The `.subckt` name in the extracted SPICE file is `<CELL>_pex`: `magic-pex` sets it directly via the `sak-pex.sh` option `-n <CELL>_pex`, while for `klayout-pex` it is automatically renamed from `<CELL>` (kpex).
 
-If a matching Xschem symbol (`schematic/xschem/<CELL>_pex.sym`) exists, the `.subckt` pin order in the extracted SPICE file is automatically reordered with the vendored `scripts/sak-pin-reorder.py` to match the symbol's pin positions. This ensures the PEX netlist can be used directly with the corresponding Xschem symbol for simulation regardless of the selected `EXT_MODE`.
+Both targets start by running `symbol-pex` (see above), so `schematic/xschem/<CELL>_pex.sym` always reflects the current cell symbol. The `.subckt` pin order in the extracted SPICE file is then reordered with the vendored `scripts/sak-pin-reorder.py` to match that symbol's pin positions. This ensures the PEX netlist can be used directly with the corresponding Xschem symbol for simulation regardless of the selected `EXT_MODE`.
 
 Both targets finish by running [`scripts/check_pex_ports.py`](scripts/check_pex_ports.py) on the netlist they just wrote. It verifies that every pin of the `.subckt` really reaches the circuit, and fails the target otherwise. Two cases are caught:
 
