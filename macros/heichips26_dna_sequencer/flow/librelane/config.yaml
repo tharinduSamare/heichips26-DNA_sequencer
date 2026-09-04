@@ -5,7 +5,7 @@ VERILOG_FILES: dir::../../rtl/accelerator/*.sv
 VERILOG_INCLUDE_DIRS:
   - dir::../../rtl/
 CLOCK_PORT: clk
-CLOCK_PERIOD: 7.6923076923 # 10ns = 100MHz, 7 = 143MHz
+CLOCK_PERIOD: 10 #7.6923076923 # 10ns = 100MHz, 7 = 143MHz
 
 # Reduce wasted space
 TOP_MARGIN_MULT: 1

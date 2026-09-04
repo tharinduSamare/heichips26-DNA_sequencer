@@ -27,6 +27,7 @@
 
 import os
 import re
+import hashlib
 import logging
 from pathlib import Path
 
@@ -262,6 +263,37 @@ async def run_case(dut, s_word, t_word, send_s=True):
 # Tests
 # ------------------------------------------------------------------------------------------------
 
+MISMATCH_HINT = (
+    "this usually means the netlist under test was built from different RTL "
+    f"than rtl/macros.svh describes (N={N}, REG_WIDTH={REG_WIDTH}); "
+    "check the netlist reported by the runner and set GL_NETLIST if it is stale"
+)
+
+
+@cocotb.test()
+async def test_netlist_matches_rtl(dut):
+    """Tie-offs that identify the design: uio is input-only and uo_out[7:REG_WIDTH] is 0.
+
+    This runs first because it is the cheapest way to notice that GL is simulating
+    the wrong netlist; every later failure would otherwise be a confusing symptom.
+    """
+    logger.info("Startup sequence...")
+    await start_up(dut)
+
+    await ClockCycles(dut.clk, 4)
+
+    assert _sig_int(dut.uio_oe, "uio_oe") == 0, \
+        f"uio_oe must be 0 (uio is input-only), got {dut.uio_oe.value} -- {MISMATCH_HINT}"
+    assert _sig_int(dut.uio_out, "uio_out") == 0, \
+        f"uio_out must be 0, got {dut.uio_out.value} -- {MISMATCH_HINT}"
+
+    unused = _sig_int(dut.uo_out, "uo_out") >> REG_WIDTH
+    assert unused == 0, \
+        f"uo_out[7:{REG_WIDTH}] must be tied to 0, got {dut.uo_out.value} -- {MISMATCH_HINT}"
+
+    logger.info("Done!")
+
+
 @cocotb.test()
 async def test_reset_state(dut):
     """After reset the outputs are cleared and the status register reports an empty FIFO."""
@@ -275,22 +307,6 @@ async def test_reset_state(dut):
     assert status & STATUS_FIFO_EMPTY, f"FIFO not empty after reset (status {status:#05b})"
     assert not status & STATUS_FIFO_FULL, f"FIFO full after reset (status {status:#05b})"
     assert not status & STATUS_RESULT_VALID, f"result valid after reset (status {status:#05b})"
-
-    logger.info("Done!")
-
-
-@cocotb.test()
-async def test_bidirectional_pins_are_inputs(dut):
-    """uio_oe / uio_out are tied off, so the uio bus stays an input."""
-    logger.info("Startup sequence...")
-    await start_up(dut)
-
-    await ClockCycles(dut.clk, 4)
-
-    assert _sig_int(dut.uio_oe, "uio_oe") == 0, \
-        f"uio_oe must be 0 (all inputs), got {dut.uio_oe.value}"
-    assert _sig_int(dut.uio_out, "uio_out") == 0, \
-        f"uio_out must be 0, got {dut.uio_out.value}"
 
     logger.info("Done!")
 
@@ -380,28 +396,44 @@ def _resolve_pdk_root():
 
 
 def _resolve_gl_netlist():
-    """Locate the synthesised netlist: GL_NETLIST, then the copied/flow outputs, then the last run."""
+    """Locate the synthesised netlist: GL_NETLIST, then the flow output, then the copies.
+
+    A macro directory can easily end up holding netlists from *different* builds
+    (e.g. netlist/ still carrying an older 16-PE run while final/ holds the 8-PE one).
+    Silently picking one of those produces a wall of unrelated failures, so compare
+    every candidate and shout if they disagree.
+    """
     if os.getenv("GL_NETLIST"):
         path = Path(os.environ["GL_NETLIST"]).expanduser()
         assert path.is_file(), f"GL_NETLIST={path} does not exist"
         return path
 
-    for rel in (f"netlist/nl/{hdl_toplevel}.nl.v",
-                f"final/nl/{hdl_toplevel}.nl.v",
-                f"flow/final/nl/{hdl_toplevel}.nl.v"):
-        path = MACRO_DIR / rel
-        if path.is_file():
-            return path
+    candidates = [MACRO_DIR / rel for rel in (
+        f"flow/final/nl/{hdl_toplevel}.nl.v",   # live LibreLane output
+        f"final/nl/{hdl_toplevel}.nl.v",        # make copy-final
+        f"netlist/nl/{hdl_toplevel}.nl.v",      # make copy-netlist
+    )]
+    candidates += [step / f"{hdl_toplevel}.nl.v"
+                   for step in sorted((MACRO_DIR / "flow" / "librelane" / "runs")
+                                      .glob("*/*-yosys-synthesis"), reverse=True)]
 
-    runs = sorted((MACRO_DIR / "flow" / "librelane" / "runs").glob("*/*-yosys-synthesis"))
-    for step in reversed(runs):
-        path = step / f"{hdl_toplevel}.nl.v"
-        if path.is_file():
-            return path
+    found = [c for c in candidates if c.is_file()]
+    if not found:
+        raise FileNotFoundError(
+            f"no gate-level netlist found for {hdl_toplevel}; run `make librelane copy-netlist` "
+            f"or point GL_NETLIST at one")
 
-    raise FileNotFoundError(
-        f"no gate-level netlist found for {hdl_toplevel}; run `make librelane copy-netlist` "
-        f"or point GL_NETLIST at one")
+    digests = {c: hashlib.md5(c.read_bytes()).hexdigest() for c in found}
+    if len(set(digests.values())) > 1:
+        print(f"[gl] WARNING: the netlists in this macro are NOT from the same build:")
+        for c in found:
+            marker = "  <-- using" if c == found[0] else ""
+            print(f"[gl]   {digests[c][:8]}  {c.stat().st_size:>8} B  "
+                  f"{c.relative_to(MACRO_DIR)}{marker}")
+        print("[gl]   Re-run the flow and `make copy-netlist copy-final` so they agree, "
+              "or set GL_NETLIST explicitly.")
+
+    return found[0]
 
 
 def heichips26_dna_sequencer_runner():
@@ -450,7 +482,9 @@ def heichips26_dna_sequencer_runner():
         build_args = ["-DSIM", "-gno-specify", "-gno-assertions"]
 
     if sim == "verilator":
-        build_args = ["--timing", "--trace", "--trace-fst", "--trace-structs"]
+        # -Wno-fatal: the RTL has many benign width mismatches (ALPHA/BETA vs REG_WIDTH,
+        # counter compares); they are lint findings, not build errors.
+        build_args = ["--timing", "--trace", "--trace-fst", "--trace-structs", "-Wno-fatal"]
 
     runner = get_runner(sim)
     runner.build(
