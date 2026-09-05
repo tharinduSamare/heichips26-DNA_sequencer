@@ -2,7 +2,7 @@
 
 `timescale 1ns/10ps
 
-module accelerator_tb();
+module heichips26_dna_sequencer_tb();
 
 localparam int test_count = 20; // number of sequences in the file
 localparam int test_type = 2; // 1: 1 S seq, 2: different S seqs
@@ -16,12 +16,19 @@ localparam T_SEQ_PREFIX = 1'b0;
 localparam RESULT_ADDR = 1'b0;
 localparam STATUS_ADDR = 1'b1;
 
-logic clk, rstn;
+logic clk, rst_n;
 
 initial begin
     clk = 1'b0;
     forever #(CLK_PERIOD/2) clk = ~clk;
 end
+
+wire [7:0] ui_in;    // Dedicated inputs - All used. 
+wire [7:0] uo_out;   // Dedicated outputs
+wire [7:0] uio_in;   // IOs: Input path
+wire [7:0] uio_out;  // IOs: Output path
+wire [7:0] uio_oe;   // IOs: Enable path (active high: 0=input, 1=output)
+wire       ena;      // always 1 when the design is powered, so you can ignore it
 
 logic addr;
 logic wr_en;
@@ -35,7 +42,12 @@ logic fifo_empty, fifo_full, result_valid;
 logic [`N-1:0] seq_in; // [s/t, seq]
 logic seq_type;
 
-accelerator dut(.*);
+heichips26_dna_sequencer dut (.*);
+
+assign ui_in = {4'b0, data_in[`N], rd_en, wr_en, addr};
+assign uio_in = data_in[`N-1:0];
+assign ena = 1'b1;
+assign data_out = uo_out[5:0];
 
 assign fifo_empty = status[2];
 assign fifo_full = status[1];
@@ -45,6 +57,9 @@ assign data_in = {seq_type, seq_in};
 initial begin
     int fd_s, fd_t, fd_max;
     int max_val;
+
+    $dumpfile("heichips26_dna_sequencer_tb.fst");
+    $dumpvars;
 
     fd_s = $fopen("../../scripts/output/seq1.txt", "r");
     fd_t = $fopen("../../scripts/output/seq2.txt", "r");
@@ -105,7 +120,7 @@ end
 
 task automatic reset_task();
     @(negedge clk);
-    rstn = 1'b0;
+    rst_n = 1'b0;
     wr_en = 1'b0;
     seq_in = '0;
     seq_type = 1'b0;
@@ -115,7 +130,7 @@ task automatic reset_task();
     result = '0;
 
     @(negedge clk);
-    rstn = 1'b1;
+    rst_n = 1'b1;
 endtask
 
 task automatic send_seq_task(input logic [`CHA_SEQ_LENGTH:0] seq);

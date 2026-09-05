@@ -2,7 +2,7 @@
 
 This is a hardware-accelerator for DNA sequence alignment based on the Smith-Waterman algorithm
 
-:metal:: The original README.md file is [here](./README_original.md)
+:metal: The original README.md file is [here](./README_original.md)
 
 ## Architecture
 
@@ -12,14 +12,14 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
   - DNA alignment accelerator : Implemented in the *ASIC* (This repository)
   - RISC-V core : Implemented in the *eFPGA* (Can be found [here](https://github.com/tharinduSamare/DNA_alignment_with_Smith_Waterman_Algorithm))
 
-- **DNA alignment accelerator**
+### **DNA alignment accelerator**
   - Performs the Smith-Waterman algorithm in hardware
   - This is capable of running at 130MHz with ihp-sg13cmos5l PDK
   - Computes the dynamic programming matrix in parallel using a  systolic array
   - Supports 8-character long DNA sequences.
   - Fully pipelined and capable of receiving a new test sequence while  previous sequence is still being processed.
 
-- **RISC-V (task specialized) processor**
+### **RISC-V (task specialized) processor**
   - A tiny RV32I task specific core runs at 15MHz on the eFPGA.
   - 6-stage multi-cycle core.
   - Supports a subset of RV32I instructions.
@@ -44,7 +44,7 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
 
 ## Hardware Requirements
 
-- We like to have an UART interface to connect the accelerator directly to a PC (skipping the RISC-V processor in the eFPGA).
+- We would like to have an UART interface in the SOC to connect the accelerator directly to a PC (skipping the RISC-V processor in the eFPGA).
 
 
 ## License

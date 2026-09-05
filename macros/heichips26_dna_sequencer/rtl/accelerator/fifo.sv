@@ -52,8 +52,12 @@ assign fifo_empty = (fifo_fill_count == 2'b00);
 assign fifo_full  = (fifo_fill_count == 2'b10);
 assign seq_out = fifo[fifo_rd_ptr];
 
-assert property (@(posedge clk) disable iff (!rstn) !(fifo_empty && fifo_full)) else $error("Fifo empty and fifo full cannot occur at once");
-
-
+// assertions
+always_ff @(posedge clk) begin
+    if(!rstn) begin
+        assert (!(fifo_empty && fifo_full)) else $error("Fifo empty and fifo full cannot occur at once");
+        assert (!(fifo_fill_count > 2'b10)) else $error("Fifo fill count exceeds maximum count of 2");
+    end
+end
 
 endmodule

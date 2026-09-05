@@ -54,6 +54,8 @@ SRCS := \
 	$(SRC_DIR)/st_lut.sv \
 	$(SRC_DIR)/PE.sv \
 	$(SRC_DIR)/systolic_array.sv \
+	$(SRC_DIR)/fifo.sv \
+	$(SRC_DIR)/accelerator.sv \
 	$(SRC_DIR)/heichips26_dna_sequencer.sv \
 
 # Source files for sim-rtl-verilog

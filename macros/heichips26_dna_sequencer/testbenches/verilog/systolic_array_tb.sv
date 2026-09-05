@@ -50,12 +50,9 @@ initial begin
         $dumpvars ();
     end
 
-    // fd_s = $fopen({pwd,"/output/seq1.txt"}, "r");
-    // fd_t = $fopen({pwd,"/output/seq2.txt"}, "r");
-    // fd_max = $fopen({pwd,"/output/final_op.txt"}, "r");
-    fd_s = $fopen("/home/samare/Documents/heiChip/SW_DNA_allignment/scripts/output/seq1.txt", "r");
-    fd_t = $fopen("/home/samare/Documents/heiChip/SW_DNA_allignment/scripts/output/seq2.txt", "r");
-    fd_max = $fopen("/home/samare/Documents/heiChip/SW_DNA_allignment/scripts/output/final_op.txt", "r");
+    fd_s = $fopen("../../scripts/output/seq1.txt", "r");
+    fd_t = $fopen("../../scripts/output/seq2.txt", "r");
+    fd_max = $fopen("../../scripts/output/final_op.txt", "r");
 
     if((fd_s == 0) || (fd_t == 0) || (fd_max == 0)) begin
         $error("some data files are missing");
@@ -154,9 +151,9 @@ function automatic logic [`N-1:0][2:0] read_s_array_from_file(input int fd);
     end while (ret == 1 && ch != "[");
 
     for(int i=0; i< `N; i++) begin
-        logic [2:0] tmp;
+        logic [1:0] tmp;
         ret = $fscanf(fd, "%b", tmp);
-        s_array[i] = tmp;
+        s_array[i] = {1'b1,tmp};
 
         if(i !=`N-1) begin
             ret = $fscanf(fd, "%c", ch);   // reads ','
@@ -182,9 +179,9 @@ function automatic logic [`M-1:0][2:0] read_t_array_from_file(input int fd);
     end while (ret == 1 && ch != "[");
 
     for(int i=0; i< `M; i++) begin
-        logic [2:0] tmp;
+        logic [1:0] tmp;
         ret = $fscanf(fd, "%b", tmp);
-        t_array[i] = tmp;
+        t_array[i] = {1'b1,tmp};
 
         if(i !=`M-1) begin
             ret = $fscanf(fd, "%c", ch);   // reads ','

@@ -1,0 +1,39 @@
+[*]
+[*] GTKWave Analyzer v3.3.128 (w)1999-2026 BSI
+[*] Sat Sep  5 16:01:24 2026
+[*]
+[dumpfile] "/home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/testbenches/verilog/heichips26_dna_sequencer_tb.fst"
+[dumpfile_mtime] "Sat Sep  5 15:54:18 2026"
+[dumpfile_size] 33582
+[savefile] "/home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/testbenches/verilog/heichips26_dna_sequencer_tb.gtkw"
+[timestart] 152000
+[size] 1920 1001
+[pos] -27 -24
+*-19.799999 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] heichips26_dna_sequencer_tb.
+[treeopen] heichips26_dna_sequencer_tb.dut.
+[treeopen] heichips26_dna_sequencer_tb.dut.accelerator_inst.
+[sst_width] 284
+[signals_width] 150
+[sst_expanded] 1
+[sst_vpaned_height] 296
+@28
+heichips26_dna_sequencer_tb.dut.clk
+heichips26_dna_sequencer_tb.dut.rst_n
+heichips26_dna_sequencer_tb.dut.accelerator_inst.wr_en
+@22
+heichips26_dna_sequencer_tb.dut.accelerator_inst.data_in[8:0]
+heichips26_dna_sequencer_tb.dut.accelerator_inst.seq_in[7:0]
+@28
+heichips26_dna_sequencer_tb.dut.accelerator_inst.seq_type_bit
+@22
+heichips26_dna_sequencer_tb.dut.accelerator_inst.data_out[5:0]
+heichips26_dna_sequencer_tb.dut.accelerator_inst.status_reg[5:0]
+@28
+heichips26_dna_sequencer_tb.dut.accelerator_inst.fifo_empty
+heichips26_dna_sequencer_tb.dut.accelerator_inst.fifo_full
+heichips26_dna_sequencer_tb.dut.accelerator_inst.result_valid
+@22
+heichips26_dna_sequencer_tb.dut.accelerator_inst.result_reg[5:0]
+[pattern_trace] 1
+[pattern_trace] 0
