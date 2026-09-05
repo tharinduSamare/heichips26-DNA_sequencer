@@ -9,16 +9,16 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
 ![DNA_SEQUENCE_ALIGN_SOC](/images/DNA_Sequence_Align_SOC_block_diagram.png)
 
 The design is divided into two parts.
-1. DNA alignment accelerator  : Implemented in the *ASIC* ([accelerator.sv](macros/heichips26_dna_sequencer/rtl/accelerator/accelerator.sv))
-2. RISC-V core                : Implemented in the *eFPGA* ([fpga_top.sv](macros/heichips26_dna_sequencer/rtl/riscv_core/fpga_top.sv))
+1. DNA alignment accelerator : Implemented in the *ASIC* ([accelerator.sv](macros/heichips26_dna_sequencer/rtl/accelerator/accelerator.sv))
+2. RISC-V core               : Implemented in the *eFPGA* ([fpga_top.sv](macros/heichips26_dna_sequencer/rtl/riscv_core/fpga_top.sv))
 
-- (Optional) uart_controller : Implemented in the *eFPGA* ([fpga_top_module.sv](macros/heichips26_dna_sequencer/rtl/uart_controller/fpga_top_module.sv))
-  - This is designed to directly drive the accelerator using a PC instead of connecting to the RISC-V core.
+- (Optional) UART-controller : Implemented in the *eFPGA* ([fpga_top_module.sv](macros/heichips26_dna_sequencer/rtl/uart_controller/fpga_top_module.sv))
+  - This is designed to directly drive the accelerator using a PC via UART instead of connecting to the RISC-V core.
 
 ### **DNA Alignment Accelerator**
-  - Performs the Smith-Waterman algorithm in hardware
-  - This is capable of running at 130MHz with ihp-sg13cmos5l PDK
-  - Computes the dynamic programming matrix in parallel using a  systolic array
+  - Performs the Smith-Waterman algorithm in hardware.
+  - This is capable of running at 130MHz with ihp-sg13cmos5l PDK.
+  - Computes the dynamic programming matrix in parallel using a  systolic array.
   - Supports 8-character long DNA sequences.
   - Fully pipelined and capable of receiving a new test sequence while  previous sequence is still being processed.
 
@@ -33,7 +33,11 @@ The design is divided into two parts.
   - Feeds sequences from the on-chip memory to the accelerator
   - Stores the alignment results back into memory
 
-#### eFPGA Resource Utilization
+### eFPGA Resource Utilization
+
+- The eFPGA contains:
+  1. A tiny RV32I core
+  2. A memory controller to route traffic to / from on-chip memory and accelerator.
 
 | Resource | Used | Available | Utilisation |
 |---|---:|---:|---:|
@@ -57,7 +61,7 @@ The design is divided into two parts.
 
 ## Testing
 
-- **SystemVerilog testbench**: [accelerator_tb.sv](macros/heichips26_dna_sequencer/testbenches/verilog/accelerator_tb.sv)
+- **SystemVerilog testbench**: [heichips26_dna_sequencer_tb.sv](macros/heichips26_dna_sequencer/testbenches/verilog/heichips26_dna_sequencer_tb.sv)
 - **Cocotb testbench**: [heichips26_dna_sequencer_tb.py](macros/heichips26_dna_sequencer/testbenches/cocotb/heichips26_dna_sequencer_tb.py)
 
 ```
