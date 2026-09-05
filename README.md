@@ -6,6 +6,8 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
 
 ## Architecture
 
+![DNA_SEQUENCE_ALIGN_SOC](/images/DNA_Sequence_Align_SOC_block_diagram.png)
+
 - The design is divided into two parts.
   - DNA alignment accelerator : Implemented in the *ASIC* (This repository)
   - RISC-V core : Implemented in the *eFPGA* (Can be found [here](https://github.com/tharinduSamare/DNA_alignment_with_Smith_Waterman_Algorithm))
