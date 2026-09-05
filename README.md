@@ -19,6 +19,8 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
   - Supports 8-character long DNA sequences.
   - Fully pipelined and capable of receiving a new test sequence while  previous sequence is still being processed.
 
+  ![ASIC_implementation](macros/heichips26_dna_sequencer/final/render/heichips26_dna_sequencer.png)
+
 ### **RISC-V (task specialized) processor**
   - A tiny RV32I task specific core runs at 15MHz on the eFPGA.
   - 6-stage multi-cycle core.
@@ -27,6 +29,19 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
   - Drives the accelerator.
   - Feeds sequences from the on-chip memory to the accelerator
   - Stores the alignment results back into memory
+
+#### eFPGA Resource Utilization
+
+| Resource | Used | Available | Utilisation |
+|---|---:|---:|---:|
+| FABULOUS_LC | 246 | 288 | 85% |
+| IOBUF | 20 | 32 | 62% |
+| TT_PROJECT | 0 | 11 | 0% |
+| TT_PROJECT_LARGE | 0 | 2 | 0% |
+| TT_PROJECT_MUX | 0 | 1 | 0% |
+| IHP_SRAM_1024x32_1RW | 1 | 1 | 100% |
+| GBUF | 1 | 4 | 25% |
+| SYS_RESET | 0 | 1 | 0% |
 
 ## How It Works
 
