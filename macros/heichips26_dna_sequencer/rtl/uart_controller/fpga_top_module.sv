@@ -1,4 +1,4 @@
-`include "macros.svh"
+`include "../macros.svh"
 
 //  top_module
 //      fully self-contained: wires genome_top (UART <-> S/T/result FIFOs) to

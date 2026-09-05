@@ -8,11 +8,14 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
 
 ![DNA_SEQUENCE_ALIGN_SOC](/images/DNA_Sequence_Align_SOC_block_diagram.png)
 
-- The design is divided into two parts.
-  - DNA alignment accelerator : Implemented in the *ASIC* (This repository)
-  - RISC-V core : Implemented in the *eFPGA* (Can be found [here](https://github.com/tharinduSamare/DNA_alignment_with_Smith_Waterman_Algorithm))
+The design is divided into two parts.
+1. DNA alignment accelerator  : Implemented in the *ASIC* ([accelerator.sv](macros/heichips26_dna_sequencer/rtl/accelerator/accelerator.sv))
+2. RISC-V core                : Implemented in the *eFPGA* ([fpga_top.sv](macros/heichips26_dna_sequencer/rtl/riscv_core/fpga_top.sv))
 
-### **DNA alignment accelerator**
+- (Optional) uart_controller : Implemented in the *eFPGA* ([fpga_top_module.sv](macros/heichips26_dna_sequencer/rtl/uart_controller/fpga_top_module.sv))
+  - This is designed to directly drive the accelerator using a PC instead of connecting to the RISC-V core.
+
+### **DNA Alignment Accelerator**
   - Performs the Smith-Waterman algorithm in hardware
   - This is capable of running at 130MHz with ihp-sg13cmos5l PDK
   - Computes the dynamic programming matrix in parallel using a  systolic array
@@ -21,8 +24,8 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
 
   ![ASIC_implementation](macros/heichips26_dna_sequencer/final/render/heichips26_dna_sequencer.png)
 
-### **RISC-V (task specialized) processor**
-  - A tiny RV32I task specific core runs at 15MHz on the eFPGA.
+### **RISC-V (Task Specialized) Processor**
+  - A tiny RV32I task specific core runs at 15MHz implemented in the eFPGA.
   - 6-stage multi-cycle core.
   - Supports a subset of RV32I instructions.
     - LW, SW, ADDI, ANDI, AND, OR, BEQ, JAL
@@ -56,6 +59,15 @@ This is a hardware-accelerator for DNA sequence alignment based on the Smith-Wat
 
 - **SystemVerilog testbench**: [accelerator_tb.sv](macros/heichips26_dna_sequencer/testbenches/verilog/accelerator_tb.sv)
 - **Cocotb testbench**: [heichips26_dna_sequencer_tb.py](macros/heichips26_dna_sequencer/testbenches/cocotb/heichips26_dna_sequencer_tb.py)
+
+```
+nix-shell
+export PDK_ROOT=$(pwd)/IHP-Open-PDK && export PDK=ihp-sg13cmos5l
+cd macros/heichips26_dna_sequencer/
+make sim-rtl-verilog CELL=heichips26_dna_sequencer
+make sim-rtl-cocotb CELL=heichips26_dna_sequencer
+make sim-gl-cocotb CELL=heichips26_dna_sequencer
+```
 
 ## Hardware Requirements
 
