@@ -126,14 +126,14 @@ You can also run the precheck locally using: `make precheck`.
 
 Here's an additional checklist:
 
-- [ ] The project top-level has a unique name starting with `heichips26_`.
-- [ ] One of the available slot sizes is used (tiny, small or large).
-- [ ] `TopMetal1` in the macro is empty. This is required for the integration.
-- [ ] The design has been verified in simulation.
-- [ ] The macro is DRC clean.
-- [ ] The macro should be LVS clean.
-- [ ] The macro uses the default power pins: VPWR, VGND, VAPWR (optional)
-- [ ] The project is licensed under a compatible open-source license, for example Apache 2.0.
+- [x] The project top-level has a unique name starting with `heichips26_`.
+- [x] One of the available slot sizes is used (tiny, small or large).
+- [x] `TopMetal1` in the macro is empty. This is required for the integration.
+- [x] The design has been verified in simulation.
+- [x] The macro is DRC clean.
+- [x] The macro should be LVS clean.
+- [x] The macro uses the default power pins: VPWR, VGND, VAPWR (optional)
+- [x] The project is licensed under a compatible open-source license, for example Apache 2.0.
 
 In order to submit your design for integration into the HeiChips 2026 Tapeout, please open an issue at the following repository: https://github.com/HeiChips/heichips26-tapeout/issues
 
