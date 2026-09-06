@@ -23,9 +23,11 @@ def bitstring_to_bytes(bit_str: str) -> bytes:
     return bytes(byte_list)
 
 def seq2bit_pattern(seq, type ="s"):
-    bit_pattern = "00" if type=="s" else "01"
-    for i in range(0,len(seq)-1,2):
-        bit_pattern += seq[i] + seq[i+1]+ ("00" if type=="s" else "01")
+    # print(f"seq2bit_pattern: {seq} and type is {type}")
+    bit_pattern = ""
+    for i in range(0,len(seq)-2,3):
+        bit_pattern += ("00" if type=="s" else "01") +seq[i] + seq[i+1] + seq[i+2]
+        # print(f"seq2bit_pattern: {seq[i]} {seq[i+1]} {seq[i+2]} and bit pattern is {bit_pattern}")
     bit_pattern = bit_pattern[:-2] # trim last two zeros added due to last loop
     return bitstring_to_bytes(bit_pattern)
 
@@ -103,8 +105,8 @@ if __name__ == "__main__":
     N = int(args.N)
     v = int(args.v)
     if(v==1):
-        seq1_len = 16
-        seq2_len = 16
+        seq1_len = 8
+        seq2_len = 8
         prev_seq = ""
         first_flag = 1
         number_of_seq2 = N
