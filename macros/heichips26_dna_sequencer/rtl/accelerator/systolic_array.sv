@@ -70,13 +70,7 @@ always_comb begin
                 s_counter_next = s_counter - 1;
             end
             else begin
-                if(t_in_valid == 1'b1) begin
-                    state_next = SEND_T_STATE;
-                    t_counter_next = `M - 1;
-                end
-                else begin
-                    state_next = IDLE_STATE;
-                end
+                state_next = IDLE_STATE;
             end
         end
 
