@@ -5,10 +5,10 @@ Clock Skew (Hold)
 ======================= nom_fast_1p32V_m40C Corner ===================================
 
 Clock clk
-0.248124 source latency _7476_/CLK ^
--0.279424 target latency _7505_/CLK ^
+0.239105 source latency _4268_/CLK ^
+-0.254768 target latency _4266_/CLK ^
 -0.250000 clock uncertainty
--0.003471 CRPR
+-0.010609 CRPR
 --------------
--0.284771 hold skew
+-0.276273 hold skew
 

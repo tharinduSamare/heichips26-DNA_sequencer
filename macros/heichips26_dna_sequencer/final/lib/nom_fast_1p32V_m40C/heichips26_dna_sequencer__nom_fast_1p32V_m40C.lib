@@ -66,30 +66,30 @@ library (heichips26_dna_sequencer) {
   }
 
   cell ("heichips26_dna_sequencer") {
-    area : 93347.109 
+    area : 93346.281 
     is_macro_cell : true;
     pin("clk") {
       direction : input;
       clock : true;
-      capacitance : 0.0440;
+      capacitance : 0.0421;
       timing() {
         timing_sense : positive_unate;
         timing_type : min_clock_tree_path;
 	cell_rise(scalar) {
-          values("0.23465");
+          values("0.23411");
 	}
 	cell_fall(scalar) {
-          values("0.22977");
+          values("0.23007");
 	}
       }
       timing() {
         timing_sense : positive_unate;
         timing_type : max_clock_tree_path;
 	cell_rise(scalar) {
-          values("0.26972");
+          values("0.25767");
 	}
 	cell_fall(scalar) {
-          values("0.26362");
+          values("0.25216");
 	}
       }
     }
@@ -104,20 +104,20 @@ library (heichips26_dna_sequencer) {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.17419");
+          values("-0.11365");
 	}
 	fall_constraint(scalar) {
-          values("-0.10649");
+          values("-0.05390");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("1.45969");
+          values("1.35923");
 	}
 	fall_constraint(scalar) {
-          values("1.29878");
+          values("1.23636");
 	}
       }
     }
@@ -143,97 +143,97 @@ library (heichips26_dna_sequencer) {
     }
     pin("ui_in[3]") {
       direction : input;
-      capacitance : 0.0032;
+      capacitance : 0.0036;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.00086");
+          values("-0.01313");
 	}
 	fall_constraint(scalar) {
-          values("0.03553");
+          values("0.01398");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.08365");
+          values("0.08204");
 	}
 	fall_constraint(scalar) {
-          values("0.05536");
+          values("0.06236");
 	}
       }
     }
     pin("ui_in[2]") {
       direction : input;
-      capacitance : 0.0033;
+      capacitance : 0.0042;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.03726");
+          values("-0.05149");
 	}
 	fall_constraint(scalar) {
-          values("0.01936");
+          values("-0.00225");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.54800");
+          values("0.54488");
 	}
 	fall_constraint(scalar) {
-          values("0.47246");
+          values("0.46530");
 	}
       }
     }
     pin("ui_in[1]") {
       direction : input;
-      capacitance : 0.0034;
+      capacitance : 0.0043;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.13457");
+          values("-0.05164");
 	}
 	fall_constraint(scalar) {
-          values("-0.04173");
+          values("-0.00395");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("1.02861");
+          values("0.88660");
 	}
 	fall_constraint(scalar) {
-          values("0.90773");
+          values("0.83595");
 	}
       }
     }
     pin("ui_in[0]") {
       direction : input;
-      capacitance : 0.0034;
+      capacitance : 0.0035;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.04175");
+          values("-0.07802");
 	}
 	fall_constraint(scalar) {
-          values("0.00915");
+          values("-0.03095");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("1.06708");
+          values("0.94071");
 	}
 	fall_constraint(scalar) {
-          values("0.93905");
+          values("0.88007");
 	}
       }
     }
@@ -244,49 +244,49 @@ library (heichips26_dna_sequencer) {
       capacitance : 0.0000;
     pin("uio_in[7]") {
       direction : input;
-      capacitance : 0.0034;
+      capacitance : 0.0030;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.06684");
+          values("-0.05468");
 	}
 	fall_constraint(scalar) {
-          values("-0.03722");
+          values("-0.02618");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.38264");
+          values("0.37129");
 	}
 	fall_constraint(scalar) {
-          values("0.36611");
+          values("0.35568");
 	}
       }
     }
     pin("uio_in[6]") {
       direction : input;
-      capacitance : 0.0035;
+      capacitance : 0.0031;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("0.01926");
+          values("-0.08694");
 	}
 	fall_constraint(scalar) {
-          values("0.04120");
+          values("-0.05451");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.65297");
+          values("0.41371");
 	}
 	fall_constraint(scalar) {
-          values("0.59420");
+          values("0.39225");
 	}
       }
     }
@@ -297,20 +297,20 @@ library (heichips26_dna_sequencer) {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.06841");
+          values("-0.08337");
 	}
 	fall_constraint(scalar) {
-          values("-0.03057");
+          values("-0.05123");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.39298");
+          values("0.40625");
 	}
 	fall_constraint(scalar) {
-          values("0.37525");
+          values("0.38567");
 	}
       }
     }
@@ -321,20 +321,20 @@ library (heichips26_dna_sequencer) {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.06401");
+          values("-0.08500");
 	}
 	fall_constraint(scalar) {
-          values("-0.02337");
+          values("-0.05247");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.16674");
+          values("0.16558");
 	}
 	fall_constraint(scalar) {
-          values("0.14002");
+          values("0.13929");
 	}
       }
     }
@@ -345,92 +345,92 @@ library (heichips26_dna_sequencer) {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.05267");
+          values("0.04745");
 	}
 	fall_constraint(scalar) {
-          values("-0.01651");
+          values("0.07557");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.13801");
+          values("0.34379");
 	}
 	fall_constraint(scalar) {
-          values("0.10975");
+          values("0.29578");
 	}
       }
     }
     pin("uio_in[2]") {
       direction : input;
-      capacitance : 0.0032;
+      capacitance : 0.0039;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.07320");
+          values("-0.06873");
 	}
 	fall_constraint(scalar) {
-          values("-0.04236");
+          values("-0.02886");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.17084");
+          values("0.15706");
 	}
 	fall_constraint(scalar) {
-          values("0.13745");
+          values("0.13256");
 	}
       }
     }
     pin("uio_in[1]") {
       direction : input;
-      capacitance : 0.0032;
+      capacitance : 0.0037;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("0.05853");
+          values("-0.08731");
 	}
 	fall_constraint(scalar) {
-          values("0.07573");
+          values("-0.05432");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.34541");
+          values("0.16572");
 	}
 	fall_constraint(scalar) {
-          values("0.29645");
+          values("0.13899");
 	}
       }
     }
     pin("uio_in[0]") {
       direction : input;
-      capacitance : 0.0033;
+      capacitance : 0.0034;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;
 	rise_constraint(scalar) {
-          values("-0.05587");
+          values("-0.07236");
 	}
 	fall_constraint(scalar) {
-          values("-0.02715");
+          values("-0.04217");
 	}
       }
       timing() {
         related_pin : "clk";
         timing_type : setup_rising;
 	rise_constraint(scalar) {
-          values("0.14786");
+          values("0.14873");
 	}
 	fall_constraint(scalar) {
-          values("0.12462");
+          values("0.12558");
 	}
       }
     }
@@ -441,7 +441,7 @@ library (heichips26_dna_sequencer) {
       capacitance : 0.0000;
     pin("uio_oe[7]") {
       direction : output;
-      capacitance : 0.0007;
+      capacitance : 0.0008;
     }
     pin("uio_oe[6]") {
       direction : output;
@@ -449,11 +449,11 @@ library (heichips26_dna_sequencer) {
     }
     pin("uio_oe[5]") {
       direction : output;
-      capacitance : 0.0008;
+      capacitance : 0.0006;
     }
     pin("uio_oe[4]") {
       direction : output;
-      capacitance : 0.0003;
+      capacitance : 0.0004;
     }
     pin("uio_oe[3]") {
       direction : output;
@@ -465,11 +465,11 @@ library (heichips26_dna_sequencer) {
     }
     pin("uio_oe[1]") {
       direction : output;
-      capacitance : 0.0009;
+      capacitance : 0.0011;
     }
     pin("uio_oe[0]") {
       direction : output;
-      capacitance : 0.0003;
+      capacitance : 0.0007;
     }
     }
     bus("uio_out") {
@@ -478,15 +478,15 @@ library (heichips26_dna_sequencer) {
       capacitance : 0.0000;
     pin("uio_out[7]") {
       direction : output;
-      capacitance : 0.0013;
+      capacitance : 0.0007;
     }
     pin("uio_out[6]") {
       direction : output;
-      capacitance : 0.0008;
+      capacitance : 0.0009;
     }
     pin("uio_out[5]") {
       direction : output;
-      capacitance : 0.0005;
+      capacitance : 0.0007;
     }
     pin("uio_out[4]") {
       direction : output;
@@ -498,7 +498,7 @@ library (heichips26_dna_sequencer) {
     }
     pin("uio_out[2]") {
       direction : output;
-      capacitance : 0.0007;
+      capacitance : 0.0006;
     }
     pin("uio_out[1]") {
       direction : output;
@@ -506,7 +506,7 @@ library (heichips26_dna_sequencer) {
     }
     pin("uio_out[0]") {
       direction : output;
-      capacitance : 0.0006;
+      capacitance : 0.0007;
     }
     }
     bus("uo_out") {
@@ -515,21 +515,21 @@ library (heichips26_dna_sequencer) {
       capacitance : 0.0000;
     pin("uo_out[7]") {
       direction : output;
-      capacitance : 0.0005;
+      capacitance : 0.0006;
     }
     pin("uo_out[6]") {
       direction : output;
-      capacitance : 0.0006;
+      capacitance : 0.0008;
     }
     pin("uo_out[5]") {
       direction : output;
-      capacitance : 0.0004;
+      capacitance : 0.0006;
       timing() {
         related_pin : "clk";
         timing_type : rising_edge;
 	cell_rise(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.42855,0.47101,0.49882,0.54461,0.62128,0.74885,0.96156");
+          values("0.42863,0.47109,0.49890,0.54470,0.62136,0.74893,0.96164");
 	}
 	rise_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
@@ -537,35 +537,35 @@ library (heichips26_dna_sequencer) {
 	}
 	cell_fall(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.42608,0.46333,0.48677,0.52529,0.58958,0.69678,0.87519");
+          values("0.42615,0.46341,0.48684,0.52537,0.58965,0.69686,0.87526");
 	}
 	fall_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.00993,0.05460,0.08673,0.14009,0.22951,0.37874,0.62737");
+          values("0.00993,0.05460,0.08673,0.14009,0.22951,0.37874,0.62738");
 	}
       }
     }
     pin("uo_out[4]") {
       direction : output;
-      capacitance : 0.0007;
+      capacitance : 0.0004;
       timing() {
         related_pin : "clk";
         timing_type : rising_edge;
 	cell_rise(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.43248,0.47498,0.50280,0.54860,0.62526,0.75284,0.96553");
+          values("0.43238,0.47489,0.50270,0.54850,0.62516,0.75274,0.96543");
 	}
 	rise_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01082,0.06697,0.10744,0.17445,0.28673,0.47391,0.78590");
+          values("0.01083,0.06697,0.10744,0.17445,0.28673,0.47391,0.78590");
 	}
 	cell_fall(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.42861,0.46590,0.48934,0.52787,0.59215,0.69935,0.87777");
+          values("0.42849,0.46579,0.48923,0.52776,0.59204,0.69924,0.87766");
 	}
 	fall_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01001,0.05463,0.08674,0.14010,0.22951,0.37876,0.62739");
+          values("0.01002,0.05463,0.08674,0.14010,0.22951,0.37876,0.62739");
 	}
       }
     }
@@ -577,19 +577,19 @@ library (heichips26_dna_sequencer) {
         timing_type : rising_edge;
 	cell_rise(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.43279,0.47530,0.50312,0.54892,0.62558,0.75315,0.96585");
+          values("0.43178,0.47428,0.50210,0.54790,0.62456,0.75213,0.96483");
 	}
 	rise_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01084,0.06697,0.10744,0.17445,0.28673,0.47391,0.78590");
+          values("0.01081,0.06696,0.10744,0.17445,0.28673,0.47391,0.78590");
 	}
 	cell_fall(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.42886,0.46615,0.48960,0.52812,0.59241,0.69961,0.87802");
+          values("0.42797,0.46526,0.48870,0.52723,0.59151,0.69872,0.87713");
 	}
 	fall_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01003,0.05463,0.08674,0.14010,0.22951,0.37876,0.62739");
+          values("0.01000,0.05462,0.08674,0.14010,0.22951,0.37875,0.62738");
 	}
       }
     }
@@ -601,39 +601,39 @@ library (heichips26_dna_sequencer) {
         timing_type : rising_edge;
 	cell_rise(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.44447,0.48713,0.51497,0.56079,0.63744,0.76503,0.97769");
+          values("0.43588,0.47844,0.50627,0.55207,0.62873,0.75631,0.96900");
 	}
 	rise_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01135,0.06707,0.10749,0.17448,0.28673,0.47391,0.78591");
+          values("0.01103,0.06700,0.10746,0.17446,0.28673,0.47391,0.78590");
 	}
 	cell_fall(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.43877,0.47625,0.49972,0.53825,0.60254,0.70973,0.88817");
+          values("0.43131,0.46867,0.49213,0.53065,0.59494,0.70214,0.88056");
 	}
 	fall_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01042,0.05476,0.08681,0.14014,0.22954,0.37883,0.62744");
+          values("0.01017,0.05468,0.08677,0.14012,0.22952,0.37878,0.62741");
 	}
       }
     }
     pin("uo_out[1]") {
       direction : output;
-      capacitance : 0.0005;
+      capacitance : 0.0003;
       timing() {
         related_pin : "clk";
         timing_type : rising_edge;
 	cell_rise(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.43152,0.47401,0.50182,0.54762,0.62428,0.75186,0.96456");
+          values("0.43312,0.47563,0.50345,0.54925,0.62591,0.75349,0.96618");
 	}
 	rise_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01076,0.06695,0.10743,0.17445,0.28673,0.47391,0.78589");
+          values("0.01086,0.06697,0.10744,0.17446,0.28673,0.47391,0.78590");
 	}
 	cell_fall(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.42786,0.46513,0.48857,0.52709,0.59138,0.69858,0.87699");
+          values("0.42693,0.46420,0.48764,0.52616,0.59045,0.69765,0.87606");
 	}
 	fall_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
@@ -643,25 +643,25 @@ library (heichips26_dna_sequencer) {
     }
     pin("uo_out[0]") {
       direction : output;
-      capacitance : 0.0005;
+      capacitance : 0.0004;
       timing() {
         related_pin : "clk";
         timing_type : rising_edge;
 	cell_rise(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.43838,0.48096,0.50879,0.55460,0.63125,0.75884,0.97152");
+          values("0.43426,0.47680,0.50461,0.55042,0.62708,0.75466,0.96735");
 	}
 	rise_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01108,0.06701,0.10746,0.17447,0.28673,0.47391,0.78590");
+          values("0.01093,0.06699,0.10745,0.17446,0.28673,0.47391,0.78590");
 	}
 	cell_fall(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.43363,0.47102,0.49447,0.53300,0.59729,0.70448,0.88291");
+          values("0.43001,0.46734,0.49079,0.52932,0.59361,0.70081,0.87922");
 	}
 	fall_transition(template_1) {
           index_1("0.00100,  0.02340,  0.03900,  0.06480,  0.10800,  0.18000,  0.30000");
-          values("0.01021,0.05470,0.08678,0.14012,0.22953,0.37879,0.62742");
+          values("0.01010,0.05466,0.08676,0.14011,0.22952,0.37877,0.62740");
 	}
       }
     }

@@ -5,10 +5,10 @@ Clock Skew (Setup)
 ======================= nom_fast_1p32V_m40C Corner ===================================
 
 Clock clk
-0.280345 source latency _7544_/CLK ^
--0.251437 target latency _7553_/CLK ^
+0.257009 source latency _4273_/CLK ^
+-0.234984 target latency _4130_/CLK ^
 0.250000 clock uncertainty
--0.003471 CRPR
+-0.002733 CRPR
 --------------
-0.275438 setup skew
+0.269292 setup skew
 
