@@ -68,6 +68,9 @@ The design is divided into two parts.
 nix-shell
 export PDK_ROOT=$(pwd)/IHP-Open-PDK && export PDK=ihp-sg13cmos5l
 cd macros/heichips26_dna_sequencer/
+cd scripts/
+python3 ./data_gen_and_validation.py --type 2 --N 20
+cd ..
 make sim-rtl-verilog CELL=heichips26_dna_sequencer
 make sim-rtl-cocotb CELL=heichips26_dna_sequencer
 make sim-gl-cocotb CELL=heichips26_dna_sequencer
