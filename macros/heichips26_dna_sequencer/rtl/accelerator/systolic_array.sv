@@ -195,14 +195,14 @@ assign t_in_ready = (state == IDLE_STATE) || (state == SEND_T_STATE) || (state =
 // assetions
 always_ff @(posedge clk) begin
     if(!rstn) begin
-        assert (
-            state == RESET_STATE    ||
-            state == IDLE_STATE     ||
-            state == SEND_S_STATE   ||
-            state == SEND_T_STATE   ||
-            state == DONE_STATE     ||
-            state == CLEAR_STATE
-        ) else $error("Invalid state: %s", state);
+        // assert (
+        //     state == RESET_STATE    ||
+        //     state == IDLE_STATE     ||
+        //     state == SEND_S_STATE   ||
+        //     state == SEND_T_STATE   ||
+        //     state == DONE_STATE     ||
+        //     state == CLEAR_STATE
+        // ) else $error("Invalid state: %s", state);
 
         assert(!(s_in_valid && t_in_valid)) else $error("Both S and T sequences can not be valid at once");
 

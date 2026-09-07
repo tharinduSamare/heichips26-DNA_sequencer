@@ -11,14 +11,15 @@ module fifo(
     output logic fifo_empty, fifo_full
 );
 
-logic [`CHA_SEQ_LENGTH:0] fifo[0:1]; // [s/t, seq]
-logic fifo_wr_ptr, fifo_rd_ptr;
-logic [1:0]fifo_fill_count;
+logic [`CHA_SEQ_LENGTH:0] fifo[0:3]; // [s/t, seq] 17-bits
+logic [1:0] fifo_wr_ptr;
+logic [1:0] fifo_rd_ptr;
+logic [2:0]fifo_fill_count;
 
 always_ff @(posedge clk) begin
     if(!rstn) begin
-        fifo_wr_ptr <= 1'b0;
-        fifo_rd_ptr <= 1'b0;
+        fifo_wr_ptr <= 2'b00;
+        fifo_rd_ptr <= 2'b00;
         fifo_fill_count <= '0;
     end
     else begin
@@ -30,13 +31,13 @@ always_ff @(posedge clk) begin
             else begin // wr_addr = `FIFO_HIGH_ADDR
                 fifo[fifo_wr_ptr][`CHA_SEQ_LENGTH-1:`N] <= seq_in;
                 fifo[fifo_wr_ptr][`CHA_SEQ_LENGTH] <= seq_type;
-                fifo_wr_ptr <= ~fifo_wr_ptr;
+                fifo_wr_ptr <= (fifo_wr_ptr == 2'b11) ? 2'b00 : fifo_wr_ptr + 1;
             end
         end
 
         // fifo read
         if (rd_en & !fifo_empty & read_last_char ) begin
-            fifo_rd_ptr <= ~fifo_rd_ptr;
+            fifo_rd_ptr <= (fifo_rd_ptr == 2'b11) ? 2'b00 : fifo_rd_ptr + 1;
         end
 
         // fifo fill count
@@ -48,15 +49,15 @@ always_ff @(posedge clk) begin
     end
 end
 
-assign fifo_empty = (fifo_fill_count == 2'b00);
-assign fifo_full  = (fifo_fill_count == 2'b10);
+assign fifo_empty = (fifo_fill_count == 3'b000);
+assign fifo_full  = (fifo_fill_count == 3'b100);
 assign seq_out = fifo[fifo_rd_ptr];
 
 // assertions
 always_ff @(posedge clk) begin
     if(!rstn) begin
         assert (!(fifo_empty && fifo_full)) else $error("Fifo empty and fifo full cannot occur at once");
-        assert (!(fifo_fill_count > 2'b10)) else $error("Fifo fill count exceeds maximum count of 2");
+        assert (!(fifo_fill_count > 3'b100)) else $error("Fifo fill count exceeds maximum count of 4");
     end
 end
 
