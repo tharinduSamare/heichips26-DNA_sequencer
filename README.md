@@ -22,6 +22,27 @@ The design is divided into two parts.
   - Supports 8-character long DNA sequences.
   - Fully pipelined and capable of receiving a new test sequence while  previous sequence is still being processed.
 
+#### ASIC Implementation
+
+| Metric | Result |
+|---|---:|
+| 🎯 Target Frequency | **100 MHz** |
+| 📐 Die Area | 100,000 µm² (500 × 200 µm) |
+| ▫️ Core Area | 93,350.9 µm² |
+| 📊 Cell Utilization | 83.53% |
+| 🔲 Standard Cells | 4,777 |
+| 🧩 Total Cell Instances | 7,436 |
+| ⚡ Total Power | 7.14 mW |
+| ⏱️ Setup WNS | 3.82 ns |
+| ⏱️ Setup TNS | 0 ns |
+| 🔒 Hold WNS | 0 ns |
+| 🔒 Hold TNS | 0 ns |
+| ✅ Setup Violations | 0 |
+| ✅ Hold Violations | 0 |
+| 🛠️ Routing DRC Errors | 0 |
+| 🔍 LVS Errors | 0 |
+
+
   ![ASIC_implementation](macros/heichips26_dna_sequencer/final/render/heichips26_dna_sequencer.png)
 
 ### **RISC-V (Task Specialized) Processor**
