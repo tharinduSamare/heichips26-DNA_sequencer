@@ -18,10 +18,12 @@ typedef enum logic [2:0] {
     SEND_S_STATE  = 3'b010,
     SEND_T_STATE  = 3'b011,
     DONE_STATE  = 3'b100,
-    CLEAR_STATE = 3'b101
+    DONE_2_STATE = 3'b101,
+    CLEAR_STATE = 3'b110
 } state_t;
 
 state_t state, state_next;
+logic processing;
 
 // control path
 always_ff @(posedge clk) begin
@@ -40,14 +42,14 @@ end
 
 always_comb begin
     state_next = state;
-    s_counter_next = s_counter;
-    t_counter_next = t_counter;
+    s_counter_next = `N-1;
+    t_counter_next = `M-1;
 
     case(state)
         RESET_STATE: begin
             state_next = IDLE_STATE;
-            s_counter_next = '0;
-            t_counter_next = '0;
+            s_counter_next = `N-1;
+            t_counter_next = `M-1;
         end
 
         IDLE_STATE: begin
@@ -57,11 +59,11 @@ always_comb begin
             end
             else if(s_in_valid == 1'b1) begin
                 state_next = SEND_S_STATE;
-                s_counter_next = `N - 1;
+                s_counter_next = `N - 2;
             end
             else if(t_in_valid == 1'b1) begin
                 state_next = SEND_T_STATE;
-                t_counter_next = `M - 1;
+                t_counter_next = `M - 2;
             end
         end
 
@@ -84,6 +86,10 @@ always_comb begin
         end
 
         DONE_STATE: begin
+            state_next = DONE_2_STATE;
+        end
+
+        DONE_2_STATE: begin // Final max_value calculation need an extra cycle
             state_next = CLEAR_STATE;
         end
 
@@ -93,12 +99,14 @@ always_comb begin
                 state_next = RESET_STATE;
             end
             else if(s_in_valid == 1'b1) begin
-                state_next = SEND_S_STATE;
-                s_counter_next = `N - 1;
+                if(~processing) begin
+                    state_next = SEND_S_STATE;
+                    s_counter_next = `N - 2;
+                end
             end
             else if(t_in_valid == 1'b1) begin
                 state_next = SEND_T_STATE;
-                t_counter_next = `M - 1;
+                t_counter_next = `M - 2;
             end
             else begin
                 state_next = IDLE_STATE;
@@ -172,39 +180,67 @@ generate
     end
 endgenerate
 
-assign shift_s    = (state_next == SEND_S_STATE) ? 1'b1 : 1'b0;
-assign s_in_bus_0 = (state_next == SEND_S_STATE) ? s_in : `BASE_IDLE;
-assign t_in_bus_0 = (state_next == SEND_T_STATE) ? t_in : `BASE_IDLE;
-assign result_valid_in_bus_0 = ((state_next == DONE_STATE) && (t_counter == 0))? 1'b1 : 1'b0;                    
+always_comb begin
+    if(state == SEND_S_STATE) begin
+        shift_s = 1'b1;
+        s_in_bus_0 = s_in;
+    end
+    else if ((state == IDLE_STATE) && (s_in_valid == 1'b1)) begin
+        shift_s = 1'b1;
+        s_in_bus_0 = s_in;
+    end
+    else if ((state == CLEAR_STATE) && (s_in_valid == 1'b1) && (processing == 1'b0)) begin
+        shift_s = 1'b1;
+        s_in_bus_0 = s_in;
+    end
+    else begin
+        shift_s = 1'b0;
+        s_in_bus_0 = `BASE_IDLE;
+    end
+end
+
+always_comb begin
+    if(state == SEND_T_STATE) begin
+        t_in_bus_0 = t_in;
+    end
+    else if ((state == IDLE_STATE) && (t_in_valid == 1'b1)) begin
+        t_in_bus_0 = t_in;
+    end
+    else if ((state == CLEAR_STATE) && (t_in_valid == 1'b1)) begin
+        t_in_bus_0 = t_in;
+    end
+    else begin
+        t_in_bus_0 = `BASE_IDLE;
+    end
+end
+
+assign result_valid_in_bus_0 = ((state == DONE_STATE))? 1'b1 : 1'b0;                    
 
 assign max_valid = (result_valid_out_bus[`N-1]) ? 1'b1 : 1'b0;
 assign max_out   = max_out_bus[`N-1];
 
-logic processing;
-assign processing = (state_next == SEND_T_STATE) || (|result_valid_in_bus);
+assign processing = (state == SEND_T_STATE) || (|result_valid_in_bus);
 
 assign s_in_ready = ~processing;
 assign t_in_ready = (state == IDLE_STATE) || (state == SEND_T_STATE) || (state == CLEAR_STATE);
 
-// assetions
 always_ff @(posedge clk) begin
-    if(!rstn) begin
-        // assert (
-        //     state == RESET_STATE    ||
-        //     state == IDLE_STATE     ||
-        //     state == SEND_S_STATE   ||
-        //     state == SEND_T_STATE   ||
-        //     state == DONE_STATE     ||
-        //     state == CLEAR_STATE
-        // ) else $error("Invalid state: %s", state);
+    if(rstn) begin
+        assert (
+            state == RESET_STATE    ||
+            state == IDLE_STATE     ||
+            state == SEND_S_STATE   ||
+            state == SEND_T_STATE   ||
+            state == DONE_STATE     ||
+            state == DONE_2_STATE   ||
+            state == CLEAR_STATE
+        ) else $error("Invalid state: %s", state);
 
         assert(!(s_in_valid && t_in_valid)) else $error("Both S and T sequences can not be valid at once");
 
-        assert(~shift_s || (state == SEND_S_STATE || state == IDLE_STATE)) else $error("shift_s = 1 at wrong state");
+        assert(~shift_s || (state == SEND_S_STATE || state_next == SEND_S_STATE)) else $error("shift_s = 1 at wrong state");
 
         assert(~max_valid || (max_out <= `MAX_SCORE)) else $error("Max_out exceeded possible maximum value");
     end
 end
-
-
 endmodule

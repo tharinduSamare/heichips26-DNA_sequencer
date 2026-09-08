@@ -1,6 +1,6 @@
 `include "../macros.svh"
 
-module fifo(
+module seq_fifo #(parameter FIFO_DEPTH = 8)(
     input logic clk, rstn,
     input logic [`N-1:0] seq_in,
     input logic seq_type,
@@ -10,8 +10,6 @@ module fifo(
     output logic [`CHA_SEQ_LENGTH:0] seq_out, // [s/t, seq]
     output logic fifo_empty, fifo_full
 );
-
-localparam FIFO_DEPTH = 8;
 
 logic [`CHA_SEQ_LENGTH:0] fifo[0:FIFO_DEPTH - 1]; // [s/t, seq] 17-bits
 logic [$clog2(FIFO_DEPTH)-1:0] fifo_wr_ptr;
@@ -53,11 +51,11 @@ end
 
 assign fifo_empty = (fifo_fill_count == '0);
 assign fifo_full  = (fifo_fill_count == FIFO_DEPTH);
-assign seq_out = fifo[fifo_rd_ptr];
+assign seq_out    = fifo[fifo_rd_ptr];
 
 // assertions
 always_ff @(posedge clk) begin
-    if(!rstn) begin
+    if(rstn) begin
         assert (!(fifo_empty && fifo_full)) else $error("Fifo empty and fifo full cannot occur at once");
         assert (!(fifo_fill_count > FIFO_DEPTH)) else $error("Fifo fill count exceeds maximum count of %d", FIFO_DEPTH);
     end

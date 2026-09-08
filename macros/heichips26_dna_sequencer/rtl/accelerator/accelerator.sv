@@ -11,6 +11,8 @@ module accelerator (
 
 localparam S_SEQ_PREFIX = 1'b1;
 localparam T_SEQ_PREFIX = 1'b0;
+localparam SEQ_FIFO_DEPTH = `FIFO_DEPTH;
+localparam RESULT_FIFO_DEPTH = SEQ_FIFO_DEPTH;
 
 logic [`N-1:0]seq_in;
 logic seq_type_in;
@@ -19,21 +21,20 @@ assign seq_type_in = data_in[`N];
 
 logic [`REG_WIDTH-1:0]status_reg;
 logic [`REG_WIDTH-1:0]result_reg;
-logic result_valid;
 
-logic fifo_rd_en, seq_read_last_char, fifo_empty, fifo_full;
+logic seq_fifo_rd_en, seq_read_last_char, seq_fifo_empty, seq_fifo_full;
 logic [`CHA_SEQ_LENGTH:0]fifo_seq_out;
 
-// fifo //
-fifo fifo_inst(
+// seq_fifo //
+seq_fifo #(.FIFO_DEPTH(SEQ_FIFO_DEPTH)) seq_fifo_inst(
     .clk(clk), .rstn(rstn),
     .seq_in(seq_in),
     .seq_type(seq_type_in),
     .wr_addr(addr),
-    .wr_en(wr_en), .rd_en(fifo_rd_en),
+    .wr_en(wr_en), .rd_en(seq_fifo_rd_en),
     .read_last_char(seq_read_last_char),
     .seq_out(fifo_seq_out), // [s/t, seq]
-    .fifo_empty(fifo_empty), .fifo_full(fifo_full)
+    .fifo_empty(seq_fifo_empty), .fifo_full(seq_fifo_full)
 );
 
 // systolic array
@@ -72,7 +73,7 @@ always_ff @(posedge clk) begin
     else begin
         case(state)
             IDLE_STATE: begin
-                if(!fifo_empty && (((seq_type_bit == S_SEQ_PREFIX) && (s_in_ready)) || ((seq_type_bit == T_SEQ_PREFIX) && (t_in_ready)))) begin
+                if(!seq_fifo_empty && (((seq_type_bit == S_SEQ_PREFIX) && (s_in_ready)) || ((seq_type_bit == T_SEQ_PREFIX) && (t_in_ready)))) begin
                     state <= SEND_SEQ_STATE;
                     seq_in_char_cnt <= 1'b1;
                 end
@@ -93,33 +94,32 @@ always_ff @(posedge clk) begin
     end
 end
 
-assign fifo_rd_en = (state == SEND_SEQ_STATE);
+assign seq_fifo_rd_en = (state == SEND_SEQ_STATE);
 
 assign char_addr = seq_in_char_cnt<<1;
 assign seq_char = {1'b1, fifo_seq_out[char_addr+:2]}; // all valid charactors have 1'b1 prefix. Systolic array internally generate IDLE_CHAR (3'b0) internally
 assign seq_read_last_char = (seq_in_char_cnt == `N-1);
-assign s_in_valid = !fifo_empty && (seq_type_bit == S_SEQ_PREFIX);
-assign t_in_valid = !fifo_empty && (seq_type_bit == T_SEQ_PREFIX);
+assign s_in_valid = !seq_fifo_empty && (seq_type_bit == S_SEQ_PREFIX);
+assign t_in_valid = !seq_fifo_empty && (seq_type_bit == T_SEQ_PREFIX);
 
+// result_fifo //
+logic [`REG_WIDTH-1:0]result_fifo_out;
+logic result_fifo_rd, result_fifo_full, result_fifo_empty;
 
-always_ff @(posedge clk) begin
-    if(!rstn) begin
-        result_reg <= '0;
-        result_valid <= 1'b0;
-    end
-    else begin
-        if(max_valid) begin
-            result_reg <= max_out;
-            result_valid <= 1'b1;
-        end
-        else if((addr == `STATUS_ADDR) && (rd_en == 1'b1)) begin // read-clean bit
-            result_valid <= 1'b0;
-        end
-    end
-end
+assign result_fifo_rd = (addr == `RESULT_ADDR) && (rd_en == 1'b1) ;
 
+result_fifo #(.FIFO_DEPTH(RESULT_FIFO_DEPTH)) result_fifo_inst(
+    .clk(clk), .rstn(rstn),
+    .result_in(max_out),
+    .wr_en(max_valid),
+    .rd_en(result_fifo_rd),
+    .result_out(result_fifo_out),
+    .fifo_empty(result_fifo_empty),
+    .fifo_full(result_fifo_full)
+);
 
-assign status_reg = {'0, fifo_empty, fifo_full, result_valid};
+assign result_reg = result_fifo_out;
+assign status_reg = {'0, seq_fifo_full, seq_fifo_empty, result_fifo_full, result_fifo_empty};
 
 always_ff @(posedge clk) begin
     if(!rstn) begin
