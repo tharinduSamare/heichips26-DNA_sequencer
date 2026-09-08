@@ -4,12 +4,19 @@
 # cocotb testbench for the heichips26_dna_sequencer macro.
 #
 # It drives the chip-level pins (ui_in / uio_in / uo_out) with the same
-# register protocol that testbenches/verilog/accelerator_tb.sv uses on the
-# internal `accelerator` module, and checks the Smith-Waterman scores against
-# the golden vectors in scripts/output/.
+# register protocol that testbenches/verilog/heichips26_dna_sequencer_tb.sv
+# uses, and checks the Smith-Waterman scores against the golden vectors in
+# scripts/output/.
 #
 #   make sim-rtl-cocotb CELL=heichips26_dna_sequencer   # RTL sources
 #   make sim-gl-cocotb  CELL=heichips26_dna_sequencer   # yosys/LibreLane netlist
+#
+# The accelerator now buffers on both sides: seq_fifo holds queued input
+# sequences and result_fifo holds finished scores, both `FIFO_DEPTH deep. The
+# Verilog bench exploits that by working in "beats" - it pushes up to
+# BEAT_SIZE half-word writes without reading anything back, then drains one
+# result per T sequence it sent. This bench mirrors that flow, so a regression
+# in the queueing shows up here too.
 #
 # Note on RTL mode: iverilog cannot parse the `state inside {...}` concurrent
 # assertion in rtl/accelerator/systolic_array.sv (`-gno-assertions` suppresses the
@@ -29,6 +36,7 @@ import os
 import re
 import hashlib
 import logging
+from collections import deque
 from pathlib import Path
 
 import cocotb
@@ -49,7 +57,8 @@ MACRO_DIR = PROJ_PATH.parent.parent                  # macros/heichips26_dna_seq
 RTL_DIR   = MACRO_DIR / "rtl"
 SRC_DIR   = RTL_DIR / "accelerator"
 
-logger = logging.getLogger("heichips26_dna_sequencer_tb")
+# top-level logger name sits outside that tree and its records go nowhere.
+logger = logging.getLogger("cocotb.heichips26_dna_sequencer_tb")
 
 
 def _clog2(value):
@@ -59,7 +68,7 @@ def _clog2(value):
 
 def _read_macros(path=RTL_DIR / "macros.svh"):
     """Pull the `define values this testbench cares about out of macros.svh."""
-    defaults = {"N": 8, "MATCH": 2}
+    defaults = {"N": 8, "MATCH": 2, "FIFO_DEPTH": 16}
     try:
         text = Path(path).read_text()
     except OSError:
@@ -77,6 +86,7 @@ _MACROS = _read_macros()
 
 N               = _MACROS["N"]                       # sequence length / number of PEs
 MATCH           = _MACROS["MATCH"]
+FIFO_DEPTH      = _MACROS["FIFO_DEPTH"]              # depth of seq_fifo and result_fifo
 SYMBOL_BITS     = 2                                  # bits per base inside the FIFO word
 CHA_SEQ_LENGTH  = N * SYMBOL_BITS                    # payload bits of a FIFO word
 MAX_SCORE       = N * MATCH
@@ -91,17 +101,20 @@ FIFO_HIGH_ADDR  = 1
 RESULT_ADDR     = 0
 STATUS_ADDR     = 1
 
-# status_reg = {..., fifo_empty, fifo_full, result_valid}
-STATUS_RESULT_VALID = 1 << 0
-STATUS_FIFO_FULL    = 1 << 1
-STATUS_FIFO_EMPTY   = 1 << 2
+# status_reg = {'0, seq_fifo_full, seq_fifo_empty, result_fifo_full, result_fifo_empty}
+STATUS_RESULT_FIFO_EMPTY = 1 << 0
+STATUS_RESULT_FIFO_FULL  = 1 << 1
+STATUS_SEQ_FIFO_EMPTY    = 1 << 2
+STATUS_SEQ_FIFO_FULL     = 1 << 3
 
-PIPELINE_DELAY  = 4                                  # idle cycles between the two FIFO half-writes
+PIPELINE_DELAY  = 0                                  # idle cycles between the two FIFO half-writes
+BEAT_SIZE       = 8                                  # half-word writes pushed before draining results
+CYCLES_PER_CALC = 21                                 # worst case per T sequence, plus margin
+
 CLK_PERIOD_NS   = float(os.getenv("CLK_PERIOD_NS", "10"))   # CLOCK_PERIOD from flow/librelane/config.yaml
 POLL_TIMEOUT    = 2000                               # max register reads before a poll gives up
 
 VECTOR_DIR      = Path(os.getenv("VECTOR_DIR", MACRO_DIR / "scripts" / "output"))
-
 
 
 def _parse_seq_line(line):
@@ -114,7 +127,7 @@ def _pack_seq(bases, reverse, prefix):
     """Pack 2-bit bases into a FIFO word {seq_type, seq[CHA_SEQ_LENGTH-1:0]}.
 
     The S sequence is fed into the array back-to-front, the T sequence front-to-back
-    (same ordering as read_s_seq_from_file()/read_t_seq_from_file() in accelerator_tb.sv).
+    (same ordering as read_s_seq_from_file()/read_t_seq_from_file() in the Verilog bench).
     """
     assert len(bases) == N, f"expected {N} bases per sequence, got {len(bases)}"
     word = 0
@@ -200,7 +213,8 @@ async def start_up(dut):
 async def read_reg(dut, addr):
     """Single-cycle register read; returns data_out (uo_out[REG_WIDTH-1:0]).
 
-    Reading STATUS_ADDR also clears the result_valid bit (read-to-clear).
+    Reading RESULT_ADDR pops one entry off the result FIFO, so only call it once
+    per score you intend to consume. Reading STATUS_ADDR has no side effects.
     """
     await FallingEdge(dut.clk)
     _drive(dut, addr=addr, rd_en=1)
@@ -210,7 +224,7 @@ async def read_reg(dut, addr):
 
 
 async def send_seq(dut, word):
-    """Push one {seq_type, seq} word into the FIFO as a low and a high half-write."""
+    """Push one {seq_type, seq} word into seq_fifo as a low and a high half-write."""
     await FallingEdge(dut.clk)
     _drive(dut, addr=FIFO_LOW_ADDR, wr_en=1, seq_byte=word & 0xFF)
     await FallingEdge(dut.clk)
@@ -237,26 +251,77 @@ async def poll_status(dut, done, what):
     raise AssertionError(f"timeout after {POLL_TIMEOUT} status reads waiting for {what}")
 
 
-async def wait_not_full(dut):
-    return await poll_status(dut, lambda s: not (s & STATUS_FIFO_FULL), "the FIFO to drain")
+async def wait_seq_fifo_not_full(dut):
+    return await poll_status(dut, lambda s: not (s & STATUS_SEQ_FIFO_FULL),
+                             "the sequence FIFO to drain")
 
 
-async def wait_result_valid(dut):
-    return await poll_status(dut, lambda s: s & STATUS_RESULT_VALID, "a valid result")
+async def wait_result_available(dut):
+    return await poll_status(dut, lambda s: not (s & STATUS_RESULT_FIFO_EMPTY),
+                             "a result to arrive")
 
 
-async def run_case(dut, s_word, t_word, send_s=True):
-    """Feed one (S, T) pair through the accelerator and return the alignment score."""
-    if send_s:
-        await wait_not_full(dut)
-        await FallingEdge(dut.clk)
-        await send_seq(dut, s_word)
+async def run_beats(dut, vectors, test_type):
+    """Feed `vectors` through the accelerator in beats, exactly as the Verilog bench does.
 
-    await wait_not_full(dut)
-    await send_seq(dut, t_word)
+    Each beat pushes at most BEAT_SIZE sequences into seq_fifo without reading
+    anything back, waits for the array to chew through them, then drains one
+    result per T sequence that was sent. Returns (failures, leftover_expected).
+    """
+    total = len(vectors)
+    expected_q = deque()
+    failures = []
 
-    await wait_result_valid(dut)
-    return await read_reg(dut, RESULT_ADDR)
+    idx = 0           # next vector to consume, mirroring the sequential file reads
+    checked = 0       # results verified so far, used only for the log line
+    test_count = 0
+    while test_count < total:
+        input_count = 0
+        t_count = 0
+        s_count = 0
+
+        # ---- fill one beat -------------------------------------------------
+        while input_count < BEAT_SIZE and (test_count + t_count) < total:
+            s_word, t_word, expected = vectors[idx]
+            idx += 1
+            expected_q.append(expected)
+
+            # send s_seq (skipped after the first case when a single S is shared)
+            if not (test_type == 1 and (test_count + t_count) > 0):
+                if input_count >= BEAT_SIZE:
+                    break
+                await send_seq(dut, s_word)
+                s_count += 1
+                input_count += 1
+
+            # send t_seq
+            if input_count >= BEAT_SIZE:
+                break
+            await send_seq(dut, t_word)
+            t_count += 1
+            input_count += 1
+
+        assert t_count > 0, \
+            f"beat pushed {s_count} S sequence(s) but no T sequence; BEAT_SIZE={BEAT_SIZE} " \
+            f"is too small to make progress"
+
+        await ClockCycles(dut.clk, t_count * CYCLES_PER_CALC, rising=False)
+        await wait_result_available(dut)
+
+        # ---- drain one score per T sequence sent ---------------------------
+        for _ in range(t_count):
+            result = await read_reg(dut, RESULT_ADDR)
+            expected = expected_q.popleft()
+            if result == expected:
+                logger.info("[%2d] correct result: %d", checked, result)
+            else:
+                logger.error("[%2d] wrong result: %d, expected %d", checked, result, expected)
+                failures.append((checked, result, expected))
+            checked += 1
+
+        test_count += t_count
+
+    return failures, expected_q
 
 
 # ------------------------------------------------------------------------------------------------
@@ -296,7 +361,7 @@ async def test_netlist_matches_rtl(dut):
 
 @cocotb.test()
 async def test_reset_state(dut):
-    """After reset the outputs are cleared and the status register reports an empty FIFO."""
+    """After reset both FIFOs report empty and neither reports full."""
     logger.info("Startup sequence...")
     await start_up(dut)
 
@@ -304,11 +369,47 @@ async def test_reset_state(dut):
         f"uo_out not zero after reset (got {dut.uo_out.value})"
 
     status = await read_reg(dut, STATUS_ADDR)
-    assert status & STATUS_FIFO_EMPTY, f"FIFO not empty after reset (status {status:#05b})"
-    assert not status & STATUS_FIFO_FULL, f"FIFO full after reset (status {status:#05b})"
-    assert not status & STATUS_RESULT_VALID, f"result valid after reset (status {status:#05b})"
+    assert status & STATUS_SEQ_FIFO_EMPTY, \
+        f"sequence FIFO not empty after reset (status {status:#06b})"
+    assert not status & STATUS_SEQ_FIFO_FULL, \
+        f"sequence FIFO full after reset (status {status:#06b})"
+    assert status & STATUS_RESULT_FIFO_EMPTY, \
+        f"result FIFO not empty after reset (status {status:#06b})"
+    assert not status & STATUS_RESULT_FIFO_FULL, \
+        f"result FIFO full after reset (status {status:#06b})"
 
     logger.info("Done!")
+
+
+@cocotb.test()
+async def test_seq_fifo_accepts_a_full_beat(dut):
+    """A whole beat can be queued without the sequence FIFO going full or losing entries.
+
+    BEAT_SIZE writes must fit in a `FIFO_DEPTH-deep seq_fifo; if the depth is ever
+    reduced below BEAT_SIZE this catches it before the score checks turn into a
+    confusing wall of wrong values.
+    """
+    vectors = _load_vectors()
+
+    logger.info("Startup sequence...")
+    await start_up(dut)
+
+    status = await read_reg(dut, STATUS_ADDR)
+    assert status & STATUS_SEQ_FIFO_EMPTY, "sequence FIFO should start empty"
+
+    queued = min(BEAT_SIZE, 2 * len(vectors))
+    for i in range(queued):
+        s_word, t_word, _ = vectors[i // 2]
+        await send_seq(dut, s_word if i % 2 == 0 else t_word)
+
+    status = await read_reg(dut, STATUS_ADDR)
+    assert not status & STATUS_SEQ_FIFO_EMPTY, \
+        f"sequence FIFO still reports empty after {queued} writes (status {status:#06b})"
+    assert not status & STATUS_SEQ_FIFO_FULL, \
+        (f"sequence FIFO went full after {queued} writes but FIFO_DEPTH={FIFO_DEPTH} "
+         f"(status {status:#06b}) -- BEAT_SIZE must not exceed FIFO_DEPTH")
+
+    logger.info("Queued %d sequences; seq_fifo neither empty nor full. Done!", queued)
 
 
 @cocotb.test()
@@ -319,20 +420,14 @@ async def test_alignment_scores(dut):
     logger.info("Startup sequence...")
     await start_up(dut)
 
-    logger.info("Running %d test case(s) from %s (%s netlist)...",
-                len(vectors), VECTOR_DIR, "gate-level" if gl else "RTL")
+    logger.info("Running %d test case(s) from %s in beats of %d (%s netlist)...",
+                len(vectors), VECTOR_DIR, BEAT_SIZE, "gate-level" if gl else "RTL")
 
-    failures = []
-    for i, (s_word, t_word, expected) in enumerate(vectors):
-        result = await run_case(dut, s_word, t_word)
+    failures, leftover = await run_beats(dut, vectors, test_type=2)
 
-        if result == expected:
-            logger.info("[%2d] correct result: %d", i, result)
-        else:
-            logger.error("[%2d] wrong result: %d, expected %d (S=%05x T=%05x)",
-                         i, result, expected, s_word, t_word)
-            failures.append((i, result, expected))
-
+    assert not leftover, \
+        f"{len(leftover)} expected score(s) were never checked -- the design returned " \
+        f"fewer results than T sequences sent"
     assert not failures, \
         f"{len(failures)}/{len(vectors)} case(s) mismatched: " + \
         ", ".join(f"#{i}: got {got}, expected {exp}" for i, got, exp in failures)
@@ -347,7 +442,6 @@ async def test_alignment_scores_shared_s(dut):
 
     s_words = {s for s, _, _ in vectors}
     if len(s_words) != 1:
-        # Reusing the loaded S only makes sense when every case aligns against the same S.
         logger.warning("skipped: seq1.txt holds different S sequences, S cannot be shared")
         return
 
@@ -356,22 +450,15 @@ async def test_alignment_scores_shared_s(dut):
 
     logger.info("Streaming %d T sequence(s) against a single S sequence...", len(vectors))
 
-    failures = []
-    for i, (s_word, t_word, expected) in enumerate(vectors):
-        result = await run_case(dut, s_word, t_word, send_s=(i == 0))
+    failures, leftover = await run_beats(dut, vectors, test_type=1)
 
-        if result == expected:
-            logger.info("[%2d] correct result: %d", i, result)
-        else:
-            logger.error("[%2d] wrong result: %d, expected %d", i, result, expected)
-            failures.append((i, result, expected))
-
+    assert not leftover, \
+        f"{len(leftover)} expected score(s) were never checked"
     assert not failures, \
         f"{len(failures)}/{len(vectors)} case(s) mismatched: " + \
         ", ".join(f"#{i}: got {got}, expected {exp}" for i, got, exp in failures)
 
     logger.info("Done!")
-
 
 
 def _resolve_pdk_root():
@@ -446,7 +533,6 @@ def heichips26_dna_sequencer_runner():
         pdk_root = _resolve_pdk_root()
         cell_lib = Path(pdk_root) / pdk / "libs.ref" / scl / "verilog"
 
-        # SCL models (UDP primitives first, they are referenced by the cell models)
         udp = cell_lib / f"{scl.replace('_stdcell', '')}_udp.v"
         if udp.is_file():
             sources.append(udp)
@@ -461,13 +547,13 @@ def heichips26_dna_sequencer_runner():
         print(f"[gl] standard cells: {cell_lib}")
         print(f"[gl] netlist:        {netlist}")
     else:
-        # Same file list (and order) as SRCS in the Makefile.
         sources += [
             SRC_DIR / "max.sv",
             SRC_DIR / "st_lut.sv",
             SRC_DIR / "PE.sv",
             SRC_DIR / "systolic_array.sv",
-            SRC_DIR / "fifo.sv",
+            SRC_DIR / "seq_fifo.sv",
+            SRC_DIR / "result_fifo.sv",
             SRC_DIR / "accelerator.sv",
             SRC_DIR / "heichips26_dna_sequencer.sv",
         ]
