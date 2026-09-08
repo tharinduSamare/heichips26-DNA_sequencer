@@ -4,11 +4,12 @@
 
 module heichips26_dna_sequencer_tb();
 
-localparam int test_count = 20; // number of sequences in the file
-localparam int test_type = 2; // 1: 1 S seq, 2: different S seqs
+localparam int TEST_COUNT = 20; // number of sequences in the file
+localparam int TEST_TYPE = 2; // 1: 1 S seq, 2: different S seqs
 
 localparam CLK_PERIOD = 10;
-localparam PIPELINE_DELAY = 4;
+localparam PIPELINE_DELAY = 0;
+localparam BEAT_SIZE = 8;
 
 localparam S_SEQ_PREFIX = 1'b1;
 localparam T_SEQ_PREFIX = 1'b0;
@@ -37,7 +38,7 @@ logic [`N:0]data_in; //{seq_type, seq[`N-1:0]}
 logic [`REG_WIDTH-1:0]data_out, result, status;
 
 logic [`CHA_SEQ_LENGTH:0] s_seq, t_seq;
-logic fifo_empty, fifo_full, result_valid;
+logic seq_fifo_empty, seq_fifo_full, result_fifo_empty, result_fifo_full;
 
 logic [`N-1:0] seq_in; // [s/t, seq]
 logic seq_type;
@@ -49,14 +50,22 @@ assign uio_in = data_in[`N-1:0];
 assign ena = 1'b1;
 assign data_out = uo_out[5:0];
 
-assign fifo_empty = status[2];
-assign fifo_full = status[1];
-assign result_valid = status[0];
+assign seq_fifo_full = status[3];
+assign seq_fifo_empty = status[2];
+assign result_fifo_full = status[1];
+assign result_fifo_empty = status[0];
 assign data_in = {seq_type, seq_in};
 
 initial begin
     int fd_s, fd_t, fd_max;
     int max_val;
+    int s_count;
+    int t_count;
+    int input_count;
+    int result_count;
+    int test_count;
+    int expected_max_val;
+    int expected_max_val_queue[$];
 
     $dumpfile("heichips26_dna_sequencer_tb.fst");
     $dumpvars;
@@ -71,52 +80,80 @@ initial begin
 
     reset_task();
 
-    for(int i=0; i<test_count; i++) begin
-        s_seq = read_s_seq_from_file(fd_s);
-        t_seq = read_t_seq_from_file(fd_t);
-        max_val = read_max_val_from_file(fd_max);
+    test_count = 0;
+    while (test_count < TEST_COUNT) begin
 
-        // expected_max_val_queue.push_back(max_val);
+        input_count = 0;
+        t_count = 0;
+        s_count = 0;
+        
+        while ((input_count < BEAT_SIZE) && ((test_count + t_count) < TEST_COUNT)) begin
+            
+            s_seq = read_s_seq_from_file(fd_s);
+            t_seq = read_t_seq_from_file(fd_t);
+            max_val = read_max_val_from_file(fd_max);
 
-        // send s_seq
-        if(!((test_type == 1) && (i > 0))) begin
-            read_reg(STATUS_ADDR);
-            while(fifo_full) begin
-                read_reg(STATUS_ADDR);
+            expected_max_val_queue.push_back(max_val);
+
+            // send s_seq
+            if(!((TEST_TYPE == 1) && ((test_count + t_count) > 0))) begin
+
+                if(input_count >= BEAT_SIZE) begin
+                    break;
+                end
+
+                send_seq_task(s_seq);
+                s_count ++;
+                input_count ++;
             end
 
-            @(negedge clk);
-            send_seq_task(s_seq);
+            // send t_seq
+            if(input_count >= BEAT_SIZE) begin
+                break;
+            end
+            send_seq_task(t_seq);
+            t_count ++;
+            input_count ++;
         end
 
-        // send t_seq
-        read_reg(STATUS_ADDR);
-        while(fifo_full) begin
+        // wait until receive all the results
+        repeat(t_count * 21) @(negedge clk); // max cycles for 1 calculation is 16 for size 8 sequences
+
+        read_reg(STATUS_ADDR); // this read is not necessary
+        while(result_fifo_empty) begin
             read_reg(STATUS_ADDR);
         end
-        send_seq_task(t_seq);
 
-        // read results
-        read_reg(STATUS_ADDR);
-        while(!result_valid) begin
-            read_reg(STATUS_ADDR);
+        result_count = 0;
+        while(result_count < t_count) begin
+            // read results
+            read_reg(RESULT_ADDR);
+            // check results
+            expected_max_val = expected_max_val_queue.pop_front();
+            if(result != expected_max_val) begin
+                $display("[ERROR] Wrong result: %d, expected %d", result, expected_max_val);
+            end
+            else begin
+                $display("[INFO] Correct result: %d", result);
+            end
+            result_count ++;
         end
-        read_reg(RESULT_ADDR);
 
-        // check results
-        if(result != max_val) begin
-            $display("[ERROR] Wrong result: %d, expected %d", result, max_val);
-        end
-        else begin
-            $display("[INFO] Correct result: %d", result);
-        end
-
+        test_count += t_count;
+    
     end
+
+    if(expected_max_val_queue.size() !=0) begin
+        $display("[ERROR] Expected_max_val_queue is not empty at the end of the test. %0d items remain", expected_max_val_queue.size());
+    end
+
+    $fclose(fd_s);
+    $fclose(fd_t);
+    $fclose(fd_max);
 
     $finish;
 
 end
-
 
 task automatic reset_task();
     @(negedge clk);

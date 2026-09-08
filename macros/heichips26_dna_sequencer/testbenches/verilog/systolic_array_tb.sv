@@ -127,6 +127,7 @@ task automatic send_s_task(input logic [`N-1:0][2:0]s_array);
     end
     @(negedge clk);
     s_in_valid = 1'b0;
+    s_in = `BASE_IDLE;
 endtask
 
 task automatic send_t_task(input logic [`M-1:0][2:0] t_array);
@@ -138,6 +139,7 @@ task automatic send_t_task(input logic [`M-1:0][2:0] t_array);
     end
     @(negedge clk);
     t_in_valid = 1'b0;
+    t_in = `BASE_IDLE;
 endtask
 
 function automatic logic [`N-1:0][2:0] read_s_array_from_file(input int fd);
