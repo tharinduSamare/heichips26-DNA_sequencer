@@ -5,10 +5,10 @@ Clock Skew (Hold)
 ======================= nom_slow_1p08V_125C Corner ===================================
 
 Clock clk
-0.556481 source latency _4163_/CLK ^
--0.594444 target latency _4204_/CLK ^
+0.598772 source latency _5805_/CLK ^
+-0.625780 target latency _5811_/CLK ^
 -0.250000 clock uncertainty
--0.004900 CRPR
+-0.021776 CRPR
 --------------
--0.292863 hold skew
+-0.298783 hold skew
 

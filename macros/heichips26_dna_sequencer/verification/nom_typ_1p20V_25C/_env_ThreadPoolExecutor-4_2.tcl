@@ -66,8 +66,8 @@ set ::env(PDN_CONNECT_MACROS_TO_GRID) 1
 set ::env(PDN_ENABLE_GLOBAL_CONNECTIONS) 1
 set ::env(DEDUPLICATE_CORNERS) 0
 set ::env(STA_MACRO_PRIORITIZE_NL) 1
-set ::env(CURRENT_NL) /home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/flow/librelane/runs/RUN_2026-09-07_13-17-03/52-openroad-fillinsertion/heichips26_dna_sequencer.nl.v
-set ::env(CURRENT_SPEF) "\"nom_*\" /home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/flow/librelane/runs/RUN_2026-09-07_13-17-03/54-openroad-rcx/nom/heichips26_dna_sequencer.nom.spef"
-set ::env(CURRENT_ODB) /home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/flow/librelane/runs/RUN_2026-09-07_13-17-03/53-odb-cellfrequencytables/heichips26_dna_sequencer.odb
-set ::env(SAVE_SDC) /home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/flow/librelane/runs/RUN_2026-09-07_13-17-03/55-openroad-stapostpnr/heichips26_dna_sequencer.sdc
+set ::env(CURRENT_NL) /home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/flow/librelane/runs/RUN_2026-09-09_12-46-26/52-openroad-fillinsertion/heichips26_dna_sequencer.nl.v
+set ::env(CURRENT_SPEF) "\"nom_*\" /home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/flow/librelane/runs/RUN_2026-09-09_12-46-26/54-openroad-rcx/nom/heichips26_dna_sequencer.nom.spef"
+set ::env(CURRENT_ODB) /home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/flow/librelane/runs/RUN_2026-09-09_12-46-26/53-odb-cellfrequencytables/heichips26_dna_sequencer.odb
+set ::env(SAVE_SDC) /home/samare/Documents/heiChip/heichips26-DNA_sequencer_submission/macros/heichips26_dna_sequencer/flow/librelane/runs/RUN_2026-09-09_12-46-26/55-openroad-stapostpnr/heichips26_dna_sequencer.sdc
 set ::env(OPENLANE_SDC_IDEAL_CLOCKS) 0
