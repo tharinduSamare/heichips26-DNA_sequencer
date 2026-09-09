@@ -10,7 +10,7 @@ team-members:
 - Udara Mendis
 slot-size: small # small, large, tiny
 analog-pins: 0 # 0-3, only for small or tiny projects
-short-description: This is a DNA sequence align accelerator based on Smith-Waterman algorithm.
+short-description: This is a DNA sequence alignment accelerator based on Smith-Waterman algorithm.
 # Please add the documentation about your project here.
 # Why did you choose to create it? How does it work? How can it be tested, etc.?
 # If your project requires additional external hardware, e.g. a USB port,
@@ -25,14 +25,15 @@ long-description: |
   ## Architecture
 
   - **DNA alignment accelerator**
-    - Performs the Smith-Waterman algorithm in hardware
-    - This is capable of running at 130MHz with ihp-sg13cmos5l PDK
+    - Implemented as a systolic array based ASIC targeting the IHP SG13CMOS5L process
+    - Performs the Smith-Waterman algorithm purely in hardware
+    - Synthesized with a target operating frequency of 100MHz. 
     - Computes the dynamic programming matrix in parallel using a systolic array
     - Supports 8-character long DNA sequences.
     - Fully pipelined and capable of receiving a new test sequence while previous sequence is still being processed.
 
   - **RISC-V (task specialized) processor**
-    - Implemented in eFPGA (Outside of this repository : You can find the full design here: [link](https://github.com/tharinduSamare/DNA_alignment_with_Smith_Waterman_Algorithm))
+    - Implemented in eFPGA
     - This is capable of running at 15MHz on the eFPGA.
     - Drives the accelerator
     - Feeds sequences from on-chip memory to the accelerator
@@ -41,20 +42,23 @@ long-description: |
   ## How It Works
 
   1. The RISC-V processor (in eFPGA) loads the encoded DNA sequences from memory.
-  2. The sequences are written to the accelerator through its MMIO interface.
-  3. The systolic array performs the alignment computation.
-  4. The processor polls the accelerator status until the result is ready.
-  5. The alignment score is read from the accelerator.
+  2. A specified number of sequences are written to the accelerator's FIFO through its MMIO interface.
+  3. The systolic array inside the accelerator performs the alignment computation.
+  4. The processor polls the accelerator status until the results are ready.
+  5. The alignment score is saved and read from the accelerator's FIFOs.
   6. The result is stored back into on-chip memory.
 
   ## Testing
 
-  * **SystemVerilog testbench**: macros/heichips26_dna_sequencer/testbenches/verilog/accelerator_tb.sv
+  * **SystemVerilog testbench**: macros/heichips26_dna_sequencer/testbenches/verilog/heichips26_dna_sequencer_tb.sv
   * **Cocotb testbench**: macros/heichips26_dna_sequencer/testbenches/cocotb/heichips26_dna_sequencer_tb.py
   
   ## Hardware Requirements
 
-  * We like to have an UART interface to connect the accelerator directly to a PC (skipping the RISC-V processor in the eFPGA).
+  - We would like to have
+    - A UART interface in the eFPGA which can connect with an external device such as a laptop or RPi (to bypass the RISC-V processor inside the eFPGA if required).
+    - A push button to reset.
+    - Capability to access the on-chip SRAM from an external device.
 
 # These paths are used to verify your
 # submission during the precheck.
