@@ -98,13 +98,10 @@ module memory #(
 
 logic [DATA_WIDTH-1:0]sram[0:MEM_DEPTH-1];
 
-// integer i;
-// initial begin
-//     for(i=0; i< MEM_DEPTH; i++) begin
-//         sram[i] = '0;
-//     end
-//     $readmemh("/home/samare/Documents/heiChip/SW_DNA_allignment/scripts/output/mem_init.hex", sram);
-// end
+integer i;
+initial begin
+    $readmemh("./firmware/output/custom/mem_init.hex", sram); // path is relative to benchmark/Makefile
+end
 
 always_ff @(posedge clk) begin
     if(!rstn) begin

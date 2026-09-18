@@ -113,6 +113,30 @@ static const uint8_t seq2_mem[N][SEQ_LEN] = {
     {1, 1, 1, 3, 3, 0, 3, 0}
 };
 
+/*
+Expected results for the above sequence pairs
+    Result[0] = 6
+    Result[1] = 7
+    Result[2] = 5
+    Result[3] = 11
+    Result[4] = 4
+    Result[5] = 10
+    Result[6] = 5
+    Result[7] = 7
+    Result[8] = 9
+    Result[9] = 7
+    Result[10] = 10
+    Result[11] = 9
+    Result[12] = 8
+    Result[13] = 7
+    Result[14] = 9
+    Result[15] = 12
+    Result[16] = 10
+    Result[17] = 7
+    Result[18] = 8
+    Result[19] = 8
+*/
+
 /* ============================================================
  * Output memory
  *

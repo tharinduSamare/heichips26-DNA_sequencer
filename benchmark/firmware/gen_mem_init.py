@@ -1,6 +1,16 @@
-data = open("firmware.bin", "rb").read()
+import sys
 
-with open("firmware.hex", "w") as f:
+if len(sys.argv) != 3:
+    print("Usage: python3 gen_mem_init.py <input.bin> <output.hex>")
+    sys.exit(1)
+
+input_file = sys.argv[1]
+output_file = sys.argv[2]
+
+with open(input_file, "rb") as f:
+    data = f.read()
+
+with open(output_file, "w") as f:
     for i in range(0, len(data), 4):
         word = data[i:i+4]
 

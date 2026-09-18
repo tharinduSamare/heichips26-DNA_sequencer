@@ -25,7 +25,7 @@ module pico32_memory #(
             sram[i] = '0;
 
         $readmemh(
-            "/home/samare/Documents/heiChip/SW_DNA_allignment/benchmark/firmware/firmware.hex",
+            "./firmware/output/acc/firmware.hex",
             sram
         );
 

@@ -36,7 +36,7 @@ module picorv32_dna_top (
     reg [31:0] memory [0:16383];
 
     initial begin
-        $readmemh("/home/samare/Documents/heiChip/SW_DNA_allignment/benchmark/firmware/firmware.hex", memory);
+        $readmemh("./firmware/output/sw/firmware.hex", memory);
     end
 
 

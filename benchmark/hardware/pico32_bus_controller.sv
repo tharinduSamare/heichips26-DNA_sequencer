@@ -1,3 +1,4 @@
+`include "macros.svh"
 module picorv32_bus_controller #(
     parameter MEM_DEPTH = 1024,
 
