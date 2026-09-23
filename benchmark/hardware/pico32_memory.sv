@@ -24,10 +24,25 @@ module pico32_memory #(
         for (i = 0; i < MEM_DEPTH; i = i + 1)
             sram[i] = '0;
 
+    `ifdef ACC_FIRMWARE
+
         $readmemh(
             "./firmware/output/acc/firmware.hex",
             sram
         );
+
+    `elsif ASM_FIRMWARE
+
+        $readmemh(
+            "./firmware/output/picorv32_asm/mem_init.hex",
+            sram
+        );
+
+    `else
+
+        $error("No firmware configuration selected!");
+
+    `endif
 
     end
 

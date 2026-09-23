@@ -20,7 +20,6 @@ CORE_RTL_DIR := $(RTL_DIR)/riscv_core
 COMMON_SRC := \
 	$(HW_DIR)/picorv32.v \
 	$(HW_DIR)/pico32_memory.sv \
-	$(HW_DIR)/pico32_bus_controller.sv \
 	$(HW_DIR)/riscv_top_module.sv
 
 
@@ -47,9 +46,6 @@ SW_SRC := \
 
 # --------------------------------------------------------------------
 # Custom RISC-V core + accelerator benchmark
-#
-# The custom core and FPGA top-level are taken directly from the
-# original RTL.
 # --------------------------------------------------------------------
 
 CUSTOM_SRC := \
@@ -63,6 +59,7 @@ CUSTOM_SRC := \
 # --------------------------------------------------------------------
 
 ACC_TB := $(TB_DIR)/picorv32_dna_alignment_acc_tb.sv
+ASM_TB := $(TB_DIR)/picorv32_dna_alignment_acc_asm_tb.sv
 SW_TB  := $(TB_DIR)/picorv32_dna_alignment_pure_sw_tb.sv
 CUSTOM_TB := $(TB_DIR)/riscv_top_module_tb.sv
 
@@ -71,12 +68,12 @@ CUSTOM_TB := $(TB_DIR)/riscv_top_module_tb.sv
 # Targets
 # --------------------------------------------------------------------
 
-.PHONY: all acc sw custom \
-        firmware-acc firmware-sw firmware-custom \
+.PHONY: all acc picorv32_asm sw custom \
+        firmware-acc firmware-asm firmware-sw firmware-custom \
         lint clean
 
 
-all: acc sw custom
+all: acc picorv32_asm sw custom
 
 
 # --------------------------------------------------------------------
@@ -85,6 +82,9 @@ all: acc sw custom
 
 firmware-acc:
 	$(MAKE) -C firmware PROGRAM=acc
+
+firmware-asm:
+	$(MAKE) -C firmware PROGRAM=picorv32_asm
 
 firmware-sw:
 	$(MAKE) -C firmware PROGRAM=sw
@@ -107,10 +107,32 @@ acc: firmware-acc
 		--top-module picorv32_acc_tb \
 		-Mdir $(BUILD_DIR)/acc \
 		$(INCLUDE_DIRS) \
+		-DACC_FIRMWARE \
 		$(ACC_SRC) \
 		$(ACC_TB)
 
 	$(BUILD_DIR)/acc/Vpicorv32_acc_tb
+
+
+# --------------------------------------------------------------------
+# PicoRV32 + accelerator + generated assembly benchmark
+# --------------------------------------------------------------------
+
+picorv32_asm: firmware-asm
+	mkdir -p $(BUILD_DIR)/asm
+	$(VERILATOR) \
+		--binary \
+		--timing \
+		--relative-includes \
+		-Wno-fatal \
+		--top-module picorv32_acc_asm_tb \
+		-Mdir $(BUILD_DIR)/asm \
+		$(INCLUDE_DIRS) \
+		-DASM_FIRMWARE \
+		$(ACC_SRC) \
+		$(ASM_TB)
+
+	$(BUILD_DIR)/asm/Vpicorv32_acc_asm_tb
 
 
 # --------------------------------------------------------------------
@@ -166,6 +188,7 @@ lint:
 		-Wno-fatal \
 		--top-module picorv32_acc_tb \
 		$(INCLUDE_DIRS) \
+		-DACC_FIRMWARE \
 		$(ACC_SRC) \
 		$(ACC_TB)
 
