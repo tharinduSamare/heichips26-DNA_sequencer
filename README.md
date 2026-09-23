@@ -114,6 +114,7 @@ Execution time is measured at a 100 MHz clock (`1 cycle = 10 ns`).
 | Configuration | Type 1 (cycles) | Type 2 (cycles) | Type 1 Speedup | Type 2 Speedup |
 |---|---:|---:|---:|---:|
 | **Custom RISC-V Core + Accelerator** | **887** | **1,225** | **219.4×** | **157.8×** |
+| PicoRV32 + Accelerator (`custom assembly`) | 1,765 | 2,269 | **110.2×** | **85.2×** |
 | PicoRV32 + Accelerator (`-Os`) | 15,262 | 26,002 | **22.7×** | **13.3×** |
 | PicoRV32 + SW only (`-Os`) | 346,034 | 346,046 | — | — |
 | PicoRV32 + Accelerator (`-O2`) | 14,876 | 26,010 | **18.8×** | **10.7×** |
