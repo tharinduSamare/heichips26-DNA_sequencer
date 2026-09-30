@@ -54,6 +54,8 @@ The design is divided into two parts.
   - Feeds sequences from the on-chip memory to the accelerator
   - Stores the alignment results back into memory
 
+![RISCV_custom_core architecture](./images/RISCV_custom_core_architecture.png)
+
 ### eFPGA Resource Utilization
 
 - The eFPGA contains:
